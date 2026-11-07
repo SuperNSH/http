@@ -9,7 +9,7 @@ scratch/decision/server.ts (drip route: headers immediately, then 4 chunks
 macOS runner with `network: "live"` (docs/evidence/decision/exp1-tsx-fetch-run.txt):
 
     E1  drip:      status=200 ttfb=1ms   total=1209ms   (headers at once, body over 1.2 s)
-    E1b stream:    status=200 ttfb=1ms   total=311ms
+    E1b stream:    status=200 ttfb=1ms   total=315ms
     E1c sse:       first event after 1ms, stream closed after ~907ms
     E6  slow-1200: ttfb=1203ms total=1203ms            (headers only after the server's delay)
 

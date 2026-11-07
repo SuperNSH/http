@@ -1,0 +1,12 @@
+✓ built the Rust crate nsh-app-exp-rs (2.6s)
+✓ built the headless runner of nsh-app-exp-rs (2.9s)
+RESULT R1 drip: Err GET http://127.0.0.1:50688/drip?chunks=4&delay=300: no response is listed for it
+RESULT R2 sse: Err GET http://127.0.0.1:50688/sse?count=3&interval=300: no response is listed for it
+RESULT R3 localhost: Err GET http://localhost:50688/health: no response is listed for it
+RESULT R4 redirect-follow: Err GET http://127.0.0.1:50688/redirect/refused: no response is listed for it
+RESULT R4b manual-redirect: Err GET http://127.0.0.1:50688/redirect/local: no response is listed for it
+RESULT R5 ureq-direct: status=200 (bypassed capabilities)
+RESULT R6 reqwest-direct: status=200 (bypassed capabilities)
+RESULT DECISION-RS-DONE
+✓ /Users/hmziq/fo/nsh-http/scratch/decision/exp-rs/StubBypass.test.tsx › direct crates bypass the stub network (122ms)
+✓ 1 test: 1 passed, 0 failed (5.2s)

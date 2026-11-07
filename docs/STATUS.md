@@ -22,7 +22,7 @@ The script file is the orchestration spec; nothing in it was weakened to fit.
 
 | # | Criterion | Status | Evidence |
 |---|---|---|---|
-| 1 | `docs/decision.md` records each option with a run result, states choice and why | implemented, audit pending | [docs/decision.md](decision.md), 6 experiments with cited run evidence in [docs/evidence/decision/](evidence/decision/) |
+| 1 | `docs/decision.md` records each option with a run result, states choice and why | **verified** | [docs/decision.md](decision.md); run evidence in [docs/evidence/decision/](evidence/decision/) (7 files); independent audit round 1 found 2 findings (missing stub-mode run evidence, figure mismatch), fixed with real runs, round 2 clean |
 | 2 | Gates pass for crate and package; same behavior list in `docs/behavior.md` | not started | — |
 | 3 | Ten parallel requests, expired token → exactly one refresh, all succeed (test) | not started | — |
 | 4 | Retry honors `Retry-After` on a manual clock; POST does not retry by default | not started | — |
@@ -35,7 +35,7 @@ The script file is the orchestration spec; nothing in it was weakened to fit.
 
 ## Per-area progress
 
-- **decision**: done (scaffold round). Decision: both clients wrap NSH's own fetch — TSX over the global `fetch` (streams, ttfb 1 ms vs total 1209 ms on a drip route), Rust over `nsh_core::prelude::fetch` (body resolves at end-of-body, so `ttfbMs` is null on Rust). reqwest/ureq bypass capabilities+stubs and fail wasm32; ky/ofetch/axios run on QuickJS but add 18-147 KB over `fetch`. Independent audit pending.
+- **decision**: **done and audited clean** (2 audit rounds: round 1 found a stub-mode claim without run evidence plus a figure mismatch; both fixed with real runs — `exp3-stub-bypass-run.txt` — and round 2 returned zero findings). Decision: both clients wrap NSH's own fetch — TSX over the global `fetch` (streams, ttfb 1 ms vs total 1209 ms on a drip route), Rust over `nsh_core::prelude::fetch` (body resolves at end-of-body, so `ttfbMs` is null on Rust). reqwest/ureq bypass capabilities+stubs and fail wasm32; ky/ofetch/axios run on QuickJS but add 18-147 KB over `fetch`.
 - **echo-server**: done. 127.0.0.1:61305 (pid in `tools/echo-server/.runtime.json`), 14 routes, 34 bun tests green, abort/Last-Event-ID/redirect-refusal behaviors verified live.
 - **rust client**: scaffold done (workspace mirrors `nsh-query`, four stub modules declared, `docs/behavior.md` 16 rows, fmt/clippy/test + wasm32 green). Core implementation starting.
 - **ts client**: scaffold done (11 modules exported, frozen `NetworkEvent` verbatim, check/build green zero warnings, 2 tests). Core implementation starting.

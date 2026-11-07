@@ -68,14 +68,17 @@ before the full body is observable from Rust code.
 ### 3. reqwest and ureq bypass the platform
 
 Same Rust app with `ureq 3.5.1` and `reqwest 0.12.28` added as dependencies,
-each called directly on a plain std thread. Full output:
+each called directly on a plain std thread. Stub-mode run output:
+`docs/evidence/decision/exp3-stub-bypass-run.txt`; live run output:
 `docs/evidence/decision/exp2-rust-fetch-run.txt`.
 
 Result: bypass proven twice. (a) Under the stubbed headless network
-(`open(".")` without routes), the app's fetches were refused with
-"no response is listed for it" while direct `ureq` and `reqwest` calls
-returned `status=200` in the same process, same test — they neither see
-`StubNetwork` nor respect it. (b) Live, both reached the server from plain
+(`open(".")` without routes; `exp3-stub-bypass-run.txt`), every app fetch
+was refused with "no response is listed for it" (R1-R4b) while direct
+`ureq` and `reqwest` calls returned `status=200` against the real local
+server in the same process, same test — they neither see `StubNetwork` nor
+respect it. (b) Live (`exp2-rust-fetch-run.txt`), both reached the server
+from plain
 app threads; capability blindness is structural — the grant check runs only
 in the engine's fetch path (`nsh-engine/src/lib.rs:2245`), which a socket
 opened by reqwest/ureq never touches. In the TSX app the same undeclared
