@@ -200,7 +200,7 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/monitor-app/node_modules/nsh-http
           ln -s "$GITHUB_WORKSPACE/deps/nsh-query/packages/nsh-query" examples/demo-ts/node_modules/nsh-query
           # The TanStack-based package depends on @tanstack/query-*; install them into the package's own node_modules.
-          bun --cwd deps/nsh-query/packages/nsh-query install --ignore-scripts
+          (cd deps/nsh-query/packages/nsh-query && bun install --ignore-scripts)
       - name: packages/nsh-http check, build and test
         working-directory: packages/nsh-http
         run: |
@@ -230,7 +230,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        demo: [demo-rs, demo-ts]
+        demo: [demo-rs, demo-ts, monitor-app]
         target: [macos, ios-simulator, linux, android, web, windows]
         include:
           - { target: macos, os: macos-latest }
@@ -300,16 +300,18 @@ jobs:
           repository: SuperNSH/query
           path: deps/nsh-query
           persist-credentials: false
-      - name: Link the packages into demo-ts
-        if: matrix.demo == 'demo-ts'
+      - name: Link the packages into the app
+        if: matrix.demo == 'demo-ts' || matrix.demo == 'monitor-app'
         shell: bash
         # Copies, not symlinks: Windows runners need extra privileges to create symlinks.
         run: |
-          mkdir -p examples/demo-ts/node_modules
-          cp -R packages/nsh-http examples/demo-ts/node_modules/nsh-http
-          cp -R deps/nsh-query/packages/nsh-query examples/demo-ts/node_modules/nsh-query
-          # The TanStack-based package depends on @tanstack/query-*; install them into the package's own node_modules.
-          bun --cwd examples/demo-ts/node_modules/nsh-query install --ignore-scripts
+          mkdir -p "examples/${{ matrix.demo }}/node_modules"
+          cp -R packages/nsh-http "examples/${{ matrix.demo }}/node_modules/nsh-http"
+          if [ "${{ matrix.demo }}" = demo-ts ]; then
+            cp -R deps/nsh-query/packages/nsh-query examples/demo-ts/node_modules/nsh-query
+            # The TanStack-based package depends on @tanstack/query-*; install them into the package's own node_modules.
+            (cd examples/demo-ts/node_modules/nsh-query && bun install --ignore-scripts)
+          fi
       - name: Package
         shell: bash
         working-directory: examples/${{ matrix.demo }}
