@@ -1,0 +1,10 @@
+✓ bundled packages/nsh-http/tests/unit/upload.app.tsx (22818 B in 5.0 ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › multipart via FormData is encoded by the platform and seen by the route (10ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › encodeMultipart produces the exact multipart bytes and exact total (1ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › an exact body reports encoded and sent progress with real byte counts (1ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › an error status from an upload comes back as http-status with the status (1ms)
+✗ packages/nsh-http/tests/unit/upload.test.ts › a caller boundary that collides with a part's content fails loudly (5.0s)
+    `text:/up-collide-out collision multipart boundary collides/` showing never happened in 5000 ms; on screen: ["up form", "up bytes", "up error", "up encode", "up collide", "up-collide-out ok 100", "up badboundary", "up-badboundary-out pending", "up-status pending", "up-encoded -", "up-sent -", "enc-ctype pending", "enc-length pending", "enc-body pending"]
+✗ packages/nsh-http/tests/unit/upload.test.ts › a boundary outside the RFC 2046 set is rejected, not encoded silently (5.0s)
+    `text:/up-badboundary-out invalid multipart boundary/` showing never happened in 5000 ms; on screen: ["up form", "up bytes", "up error", "up encode", "up collide", "up-collide-out pending", "up badboundary", "up-badboundary-out ok 209", "up-status pending", "up-encoded -", "up-sent -", "enc-ctype pending", "enc-length pending", "enc-body pending"]
+error 6 tests: 4 passed, 2 failed (10.0s)

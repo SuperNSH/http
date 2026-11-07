@@ -36,6 +36,9 @@ function UploadScreen() {
   const ctype = signal("pending");
   const length = signal("pending");
   const body = signal("pending");
+  const collideOut = signal("pending");
+  const boundaryOut = signal("pending");
+  const rerollOut = signal("pending");
   const noteProgress = (progress: { phase: "encoded" | "sent"; sentBytes: number | null; totalBytes: number | null }): void => {
     const shown = `${progress.sentBytes === null ? "null" : progress.sentBytes} ${progress.totalBytes === null ? "null" : progress.totalBytes}`;
     if (progress.phase === "encoded") encoded.set(shown);
@@ -66,12 +69,48 @@ function UploadScreen() {
       uploadBytes(stubbed, "/upload-fail", encoding).then(() => status.set("200 ok"), fail),
     );
   };
+  const collide = (): void => {
+    const parts: UploadPart[] = [{ name: "note", value: "hello --XBOUNDARY world" }];
+    void encodeMultipart(parts, "XBOUNDARY").then(
+      (encoding) => collideOut.set(`ok ${encoding.bytes.byteLength}`),
+      (cause: unknown) => collideOut.set(`collision ${(cause as Error).message.slice(0, 80)}`),
+    );
+  };
+  const badBoundary = (): void => {
+    void encodeMultipart(PARTS, "bad boundary!").then(
+      (encoding) => boundaryOut.set(`ok ${encoding.bytes.byteLength}`),
+      (cause: unknown) => boundaryOut.set((cause as Error).message.slice(0, 80)),
+    );
+  };
+  const reroll = (): void => {
+    // Pin the generated boundary so every candidate collides with the part, and the
+    // candidate cap is reached deterministically.
+    const real = crypto.randomUUID;
+    crypto.randomUUID = () => "00000000-0000-4000-8000-000000000000";
+    const parts: UploadPart[] = [{ name: "note", value: `x ----nsh-http-00000000000040008000000000000000 y` }];
+    void encodeMultipart(parts).then(
+      (encoding) => {
+        crypto.randomUUID = real;
+        rerollOut.set(`ok ${encoding.bytes.byteLength}`);
+      },
+      (cause: unknown) => {
+        crypto.randomUUID = real;
+        rerollOut.set((cause as Error).message.slice(0, 90));
+      },
+    );
+  };
   return (
     <View class="gap-2">
       <Row id="up-form" label="up form" onPress={formSend} />
       <Row id="up-bytes" label="up bytes" onPress={bytesSend} />
       <Row id="up-error" label="up error" onPress={errorSend} />
       <Row id="up-encode" label="up encode" onPress={encode} />
+      <Row id="up-collide" label="up collide" onPress={collide} />
+      <Row id="up-collide-out" label={`up-collide-out ${collideOut()}`} />
+      <Row id="up-badboundary" label="up badboundary" onPress={badBoundary} />
+      <Row id="up-badboundary-out" label={`up-badboundary-out ${boundaryOut()}`} />
+      <Row id="up-reroll" label="up reroll" onPress={reroll} />
+      <Row id="up-reroll-out" label={`up-reroll-out ${rerollOut()}`} />
       <Row id="up-status" label={`up-status ${status()}`} />
       <Row id="up-encoded" label={`up-encoded ${encoded()}`} />
       <Row id="up-sent" label={`up-sent ${sent()}`} />

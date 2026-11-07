@@ -118,6 +118,44 @@ test("redaction covers secret query names on url and path helpers, and redact: f
   expect(JSON.stringify(off.events())).toContain("raw-secret");
 });
 
+test("secrets echoed in error and initiator free text never reach the recorded event (criterion 8)", () => {
+  const monitor = new Monitor();
+  monitor.record(
+    event({
+      id: "echo",
+      url: `${BASE}/x?token=url-secret`,
+      path: "/x?token=url-secret",
+      status: null,
+      ttfbMs: null,
+      // A transport error quoting the URL: everything past its first `?` is query-shaped.
+      error: "Network request failed: GET http://h/x?token=echo-secret: connection refused",
+      initiator: "authorization: Bearer sk-header-echo",
+    }),
+  );
+  monitor.record(event({ id: "echo2", error: `refresh denied: {"set-cookie":"sid=cookie-echo"}` }));
+
+  const serialized = JSON.stringify(monitor.events());
+  expect(serialized).not.toContain("url-secret");
+  expect(serialized).not.toContain("echo-secret");
+  expect(serialized).not.toContain("sk-header-echo");
+  expect(serialized).not.toContain("cookie-echo");
+  const [first, second] = monitor.events();
+  expect(first?.error).toBe(`Network request failed: GET http://h/x?token=${REDACTED}`);
+  // The whole header value is the secret, scheme included — the Rust mask_headers.
+  expect(first?.initiator).toBe(`authorization: ${REDACTED}`);
+  expect(second?.error).toBe(`refresh denied: {"set-cookie":"${REDACTED}"}`);
+});
+
+test("path aggregates group by the path without its query, like the Rust path_stats", () => {
+  const monitor = new Monitor();
+  monitor.record(event({ id: "q1", path: "/slow?delay=1200", durationMs: 100 }));
+  monitor.record(event({ id: "q2", path: "/slow", durationMs: 300 }));
+
+  const byPath = monitor.byPath();
+  expect(Object.keys(byPath)).toEqual(["/slow"]);
+  expect(byPath["/slow"]).toEqual({ count: 2, errorRate: 0, p50Ms: 100, p95Ms: 300 });
+});
+
 test("sampleRate keeps a deterministic fraction of attempts", () => {
   const draws = [0.1, 0.9, 0.2, 0.95];
   const monitor = new Monitor({ sampleRate: 0.5, random: () => draws.shift() ?? 1 });

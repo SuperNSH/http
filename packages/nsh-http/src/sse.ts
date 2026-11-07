@@ -1,9 +1,11 @@
 /** Server-sent events with reconnect and `Last-Event-ID` (behavior row 14 of
  * `docs/behavior.md`): an incremental `text/event-stream` parser, exponential reconnect
  * backoff that a server `retry:` line overrides, `Last-Event-ID` on every reconnect,
- * and cancellation through the caller's `AbortSignal` or `close()`. Each (re)connection
- * is one client attempt, so it emits one `NetworkEvent` measured to the handoff — the
- * body is consumed here, after that event ends. */
+ * and cancellation through the caller's `AbortSignal` or `close()`. A non-2xx answer or
+ * a body without a `text/event-stream` content type ends the source with an error — the
+ * server refusing SSE is not retryable. Each (re)connection is one client attempt, so
+ * it emits one `NetworkEvent` measured to the handoff — the body is consumed here,
+ * after that event ends. */
 
 import type { HttpClient } from "./client";
 import { errorFromRejection, HttpError } from "./errors";
@@ -20,8 +22,8 @@ export interface SseEvent {
 }
 
 /** Reconnect backoff, shaped like the request retry policy; `maxRetries` counts
- * consecutive failed connections (a clean stream end always reconnects while retries
- * remain). Default: reconnect until cancelled, doubling from 1 s, capped at 30 s. */
+ * consecutive failed connections — a clean stream end always reconnects, whatever the
+ * cap says. Default: reconnect until cancelled, doubling from 1 s, capped at 30 s. */
 export type SseReconnect = RetryPolicy;
 
 const defaultReconnect: RetryPolicy = {
@@ -72,6 +74,16 @@ export function connectEventSource(
     closed = true;
   }, { once: true });
 
+  // A refused connect still owns a body stream: release it before the loop goes on (or
+  // ends), so a failed-status answer does not leak the underlying connection.
+  const discardBody = async (response: Response): Promise<void> => {
+    try {
+      await response.body?.cancel();
+    } catch {
+      // The body already closed or the connection is gone — nothing to release.
+    }
+  };
+
   const consume = async (response: Response): Promise<void> => {
     const reader = response.body?.getReader();
     if (reader === undefined) return;
@@ -100,24 +112,36 @@ export function connectEventSource(
       try {
         const response = await client.send({ method: "GET", url, headers }, { signal: composed, timeoutMs: null, retry: noRetries });
         if (closed) return;
+        // A non-2xx is the server refusing SSE: it ends the source, as the Rust half's
+        // Err(HttpStatus) does — retrying a refused endpoint would loop forever.
         if (!response.ok) {
-          attempt += 1;
+          await discardBody(response);
           options.onError?.(new HttpError("http-status", `HTTP ${response.status}`, { status: response.status }));
-        } else {
-          attempt = 0;
-          options.onOpen?.(handle);
-          await consume(response);
+          return;
         }
+        const contentType = response.headers.get("content-type") ?? "";
+        if (!contentType.includes("text/event-stream")) {
+          await discardBody(response);
+          options.onError?.(
+            new HttpError("network", `the SSE connect answered ${response.status} without a text/event-stream body`),
+          );
+          return;
+        }
+        attempt = 0;
+        options.onOpen?.(handle);
+        await consume(response);
       } catch (cause) {
         if (closed) return;
         attempt += 1;
         options.onError?.(errorFromRejection(cause));
+        // Only failed connections count toward the cap: after a clean stream end the
+        // loop reconnects whatever maxRetries says, as the Rust loop does.
+        if (attempt >= policy.maxRetries) {
+          options.onError?.(new HttpError("network", `gave up after ${attempt} failed connections`));
+          return;
+        }
       }
       if (closed) return;
-      if (attempt >= policy.maxRetries) {
-        options.onError?.(new HttpError("network", `gave up after ${attempt} failed connections`));
-        return;
-      }
       // A server `retry:` line is sticky: it replaces the computed backoff from then on.
       await sleep(retryOverrideMs ?? retryDelayMs(policy, attempt));
       if (closed) return;
@@ -221,9 +245,13 @@ class SseParser {
       case "id":
         if (!value.includes("\0")) this.lastEventId = value;
         return null;
-      case "retry":
-        if (/^\d+$/.test(value)) this.retryMs = Number(value);
+      case "retry": {
+        // The Rust half parses u64: non-digits and values past u64::MAX are ignored,
+        // not clamped — a 200-digit retry must never become a reconnection time.
+        const ms = Number(value);
+        if (/^\d+$/.test(value) && Number.isFinite(ms) && ms <= U64_MAX_MS) this.retryMs = ms;
         return null;
+      }
       default:
         return null;
     }
@@ -245,6 +273,12 @@ class SseParser {
   }
 }
 
+/** The largest millisecond value the Rust half parses for `retry:` (u64::MAX). */
+const U64_MAX_MS = 18_446_744_073_709_551_615;
+
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  // setTimeout coerces delays past 2^31-1 unpredictably (Infinity fires near-instantly),
+  // so a legal-but-astronomical retry waits the runtime's own ceiling instead: about
+  // 24.8 days, effectively the stop that Rust's u64::MAX ms timer is.
+  return new Promise((resolve) => setTimeout(resolve, Math.min(ms, 2_147_483_647)));
 }

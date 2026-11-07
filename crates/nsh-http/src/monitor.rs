@@ -84,7 +84,7 @@ pub struct Stats {
     pub p95_ms: Option<u64>,
 }
 
-/// Builds a [`Monitor`]. Defaults: capacity [`MONITOR_CAPACITY`], every attempt
+/// Builds a [`Monitor`]. Defaults: capacity [`DEFAULT_CAPACITY`], every attempt
 /// kept, redaction on.
 #[derive(Debug, Clone)]
 pub struct MonitorBuilder {
@@ -149,8 +149,9 @@ pub struct Monitor {
     core: Arc<Mutex<Core>>,
 }
 
-/// The default ring size.
-const MONITOR_CAPACITY: usize = 512;
+/// The default ring size, one number with the TypeScript package's
+/// `DEFAULT_CAPACITY` so both sides keep the same recent traffic.
+const DEFAULT_CAPACITY: usize = 200;
 
 impl Default for Monitor {
     fn default() -> Self {
@@ -162,13 +163,13 @@ impl Monitor {
     /// Configures a monitor: capacity, sampling, redaction, then `build`.
     pub fn builder() -> MonitorBuilder {
         MonitorBuilder {
-            capacity: MONITOR_CAPACITY,
+            capacity: DEFAULT_CAPACITY,
             sampling: Sampling::All,
             redact: true,
         }
     }
 
-    /// The default monitor: capacity [`MONITOR_CAPACITY`], all attempts,
+    /// The default monitor: capacity [`DEFAULT_CAPACITY`], all attempts,
     /// redaction on.
     pub fn new() -> Self {
         Self::default()

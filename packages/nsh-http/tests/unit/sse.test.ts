@@ -79,3 +79,45 @@ test("the caller's signal cancels the stream and nothing reconnects", async () =
   expect(app.shows("text:sse-errors 0")).toBeTruthy();
   expect(app.shows("text:sse-opens 1")).toBeTruthy();
 });
+
+test("a permanently non-2xx connect ends the source with an error instead of looping", async () => {
+  const app = await showSse();
+  await app.press("id:sse-status404");
+  await app.waitFor("text:sse-lasterr HTTP 404");
+  await app.clock!.runFor(5000);
+  expect(app.shows("text:sse-conns 1")).toBeTruthy();
+  expect(app.shows("text:sse-errors 1")).toBeTruthy();
+  // The refused connect's body was released, not left open across the end of the source.
+  expect(app.shows("text:sse-cancels 1")).toBeTruthy();
+});
+
+test("a connect without a text/event-stream body ends the source without reconnecting", async () => {
+  const app = await showSse();
+  await app.press("id:sse-ctype");
+  await app.waitFor("text:/sse-lasterr the SSE connect answered 200 without a text.event-stream body/");
+  await app.clock!.runFor(5000);
+  expect(app.shows("text:sse-conns 1")).toBeTruthy();
+  expect(app.shows("text:sse-cancels 1")).toBeTruthy();
+});
+
+test("a huge server retry value is ignored like the Rust u64 parse, so the loop never spins", async () => {
+  const app = await showSse();
+  await app.press("id:sse-huge");
+  await app.waitFor("text:sse-opens 1");
+  await app.wait(0);
+  expect(app.shows("text:sse-conns 1")).toBeTruthy();
+  await app.clock!.runFor(500);
+  expect(app.shows("text:sse-conns 1")).toBeTruthy();
+  // The huge value never became a reconnection time; the plain backoff still reconnects.
+  expect(app.shows("text:sse-retryms none")).toBeTruthy();
+  await app.clock!.runFor(500);
+  await app.waitFor("text:sse-opens 2");
+});
+
+test("a clean stream end reconnects even with maxRetries 0 — only failed connections count", async () => {
+  const app = await showSse();
+  await app.press("id:sse-cleanclose");
+  await app.waitFor("text:sse-opens 2");
+  expect(app.shows("text:sse-conns 2")).toBeTruthy();
+  expect(app.shows("text:sse-errors 0")).toBeTruthy();
+});

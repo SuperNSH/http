@@ -62,36 +62,109 @@ export interface MultipartEncoding {
   bytes: Uint8Array;
 }
 
+/** Why `boundary` is not a legal RFC 2046 boundary (1-70 characters of the allowed set,
+ * no trailing space), if it is not one. */
+function boundaryError(boundary: string): string | null {
+  if (boundary.length === 0 || boundary.length > 70) {
+    return `must be 1-70 characters, got ${boundary.length}`;
+  }
+  if (!/^[\x00-\x7F]+$/.test(boundary)) return "must be ASCII";
+  for (let index = 0; index < boundary.length; index += 1) {
+    const character = boundary[index];
+    const allowed =
+      /[A-Za-z0-9]/.test(character) || "'()+_,-./:=?".includes(character) || (character === " " && index + 1 !== boundary.length);
+    if (!allowed) return `"${character}" is outside the RFC 2046 set`;
+  }
+  return null;
+}
+
+/** One part with its bytes settled, ready for the collision check and the encoder. */
+interface EncodedPart {
+  name: string;
+  filename: string | null;
+  contentType: string | null;
+  bytes: Uint8Array;
+}
+
+async function encodedPartsOf(parts: UploadPart[]): Promise<EncodedPart[]> {
+  const encoder = new TextEncoder();
+  return Promise.all(
+    parts.map(async (part) => {
+      if (typeof part.value === "string" && part.filename === undefined) {
+        return { name: part.name, filename: null, contentType: null, bytes: encoder.encode(part.value) };
+      }
+      const filename = part.filename ?? (typeof part.value === "string" || !(part.value instanceof File) ? "blob" : part.value.name);
+      const contentType =
+        part.contentType ??
+        (typeof part.value === "string" || part.value.type === "" ? "application/octet-stream" : part.value.type);
+      const bytes = typeof part.value === "string" ? encoder.encode(part.value) : await part.value.bytes();
+      return { name: part.name, filename, contentType, bytes };
+    }),
+  );
+}
+
+/** Whether any part's name, filename or bytes contain the boundary — the collision
+ * RFC 2046 forbids, and the one that makes a body silently unparseable. */
+function partsContain(parts: EncodedPart[], boundary: string): boolean {
+  const encoder = new TextEncoder();
+  const needle = encoder.encode(boundary);
+  const contains = (haystack: Uint8Array): boolean => {
+    search: for (let start = 0; start + needle.length <= haystack.length; start += 1) {
+      for (let offset = 0; offset < needle.length; offset += 1) {
+        if (haystack[start + offset] !== needle[offset]) continue search;
+      }
+      return true;
+    }
+    return false;
+  };
+  return parts.some(
+    (part) =>
+      contains(encoder.encode(part.name)) ||
+      (part.filename !== null && contains(encoder.encode(part.filename))) ||
+      contains(part.bytes),
+  );
+}
+
+function generateBoundary(): string {
+  return `----nsh-http-${crypto.randomUUID().replace(/-/g, "")}`;
+}
+
 /** Encodes the multipart body here instead of in the runtime, so its exact byte length
  * is known up front — the only way upload progress can report real numbers. Field names
  * and filenames are percent-escaped for quotes and line breaks so a part cannot forge a
- * boundary. A `Blob` part's bytes are read before encoding, so this awaits. */
-export async function encodeMultipart(
-  parts: UploadPart[],
-  boundary = `----nsh-http-${crypto.randomUUID().replace(/-/g, "")}`,
-): Promise<MultipartEncoding> {
+ * boundary. A caller boundary is validated and checked against every part (a boundary
+ * appearing inside a part makes the body unparseable); a generated one re-rolls, like
+ * the Rust half. A `Blob` part's bytes are read before encoding, so this awaits. */
+export async function encodeMultipart(parts: UploadPart[], boundary?: string): Promise<MultipartEncoding> {
+  const generated = boundary === undefined;
+  let chosen = boundary ?? generateBoundary();
+  if (!generated) {
+    const reason = boundaryError(chosen);
+    if (reason !== null) throw new Error(`invalid multipart boundary: ${reason}`);
+  }
+  const encoded = await encodedPartsOf(parts);
+  // Eight candidates in total, as the Rust loop's `for _ in 0..8` counts them.
+  for (let candidate = 0; ; candidate += 1) {
+    if (!partsContain(encoded, chosen)) break;
+    if (!generated) throw new Error("multipart boundary collides with a part's name, filename or content");
+    if (candidate + 1 >= 8) throw new Error("the boundary occurs inside a part's content after 8 candidates");
+    chosen = generateBoundary();
+  }
   const escape = (text: string) => text.replace(/"/g, "%22").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
   const chunks: (Uint8Array | string)[] = [];
-  for (const part of parts) {
-    chunks.push(`--${boundary}\r\n`);
-    if (typeof part.value === "string" && part.filename === undefined) {
+  for (const part of encoded) {
+    chunks.push(`--${chosen}\r\n`);
+    if (part.filename === null) {
       chunks.push(`Content-Disposition: form-data; name="${escape(part.name)}"\r\n\r\n`);
-      chunks.push(part.value);
     } else {
-      const filename = escape(
-        part.filename ?? (typeof part.value === "string" || !(part.value instanceof File) ? "blob" : part.value.name),
-      );
-      const type =
-        part.contentType ??
-        (typeof part.value === "string" || part.value.type === "" ? "application/octet-stream" : part.value.type);
-      chunks.push(`Content-Disposition: form-data; name="${escape(part.name)}"; filename="${filename}"\r\n`);
-      chunks.push(`Content-Type: ${type}\r\n\r\n`);
-      chunks.push(typeof part.value === "string" ? part.value : await part.value.bytes());
+      chunks.push(`Content-Disposition: form-data; name="${escape(part.name)}"; filename="${escape(part.filename)}"\r\n`);
+      chunks.push(`Content-Type: ${part.contentType}\r\n\r\n`);
     }
+    chunks.push(part.bytes);
     chunks.push("\r\n");
   }
-  chunks.push(`--${boundary}--\r\n`);
-  return { contentType: `multipart/form-data; boundary=${boundary}`, boundary, bytes: concatBytes(chunks) };
+  chunks.push(`--${chosen}--\r\n`);
+  return { contentType: `multipart/form-data; boundary=${chosen}`, boundary: chosen, bytes: concatBytes(chunks) };
 }
 
 /** Uploads a body built here (see `encodeMultipart`), so both progress events carry the

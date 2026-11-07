@@ -1,0 +1,13 @@
+✓ bundled packages/nsh-http/tests/unit/sse.app.tsx (28444 B in 57.8 ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the parser dispatches id, event, data, multi-line data and retry, skipping comments (104ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a broken stream reconnects and sends Last-Event-ID of the last seen event (419ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a server retry line overrides the reconnect backoff (66ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › close() during the backoff stops any reconnect (181ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the connection gives up with an error after maxRetries failed connections (77ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the caller's signal cancels the stream and nothing reconnects (108ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a permanently non-2xx connect ends the source with an error instead of looping (53ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a connect without a text/event-stream body ends the source without reconnecting (38ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a huge server retry value is ignored like the Rust u64 parse, so the loop never spins (21ms)
+✗ packages/nsh-http/tests/unit/sse.test.ts › a clean stream end reconnects even with maxRetries 0 — only failed connections count (5.0s)
+    `text:sse-opens 2` showing never happened in 5000 ms; on screen: ["sse parse", "sse reconnect", "sse retry", "sse close", "do close", "sse giveup", "sse status404", "sse ctype", "sse huge", "sse cleanclose", "sse cancel", "do cancel", "sse-opens 1", "sse-conns 1", "sse-events 1", "sse-errors 1", "sse-last 1|message|a", "sse-leid none", "sse-firsts 1", "sse-lasterr gave up after 0 failed connections", "sse-retryms none", "sse-handle none", "sse-cancels 0"]
+error 10 tests: 9 passed, 1 failed (6.1s)

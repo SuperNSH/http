@@ -18,11 +18,15 @@ interface Script {
   /** Raw SSE text pieces, each sent one timer after the previous (0 ms: all at once). */
   pieces: string[];
   then: "close" | "error" | "hold";
+  /** The connect's status (200). */
+  status?: number;
+  /** The connect's content type ("text/event-stream"). */
+  contentType?: string;
 }
 
 /** A scripted event-stream source over the platform's Response/stream types. Honors
  * `request.signal` like the platform fetch does, so a cancel really breaks the stream. */
-function scriptedSse(scripts: Script[]): Transport {
+function scriptedSse(scripts: Script[], onCancel?: () => void): Transport {
   let index = 0;
   return (request: HttpRequest): Promise<Response> => {
     const signal = request.signal;
@@ -46,11 +50,19 @@ function scriptedSse(scripts: Script[]): Transport {
         };
         step();
       },
+      cancel() {
+        onCancel?.();
+      },
     });
     signal?.addEventListener("abort", () => {
       controllerHolder.current?.error(signal.reason);
     }, { once: true });
-    return Promise.resolve(new Response(stream, { status: 200, headers: { "content-type": "text/event-stream" } }));
+    return Promise.resolve(
+      new Response(stream, {
+        status: script.status ?? 200,
+        headers: { "content-type": script.contentType ?? "text/event-stream" },
+      }),
+    );
   };
 }
 
@@ -67,6 +79,7 @@ function SseScreen() {
   const lasterr = signal("none");
   const retryms = signal("none");
   const handleId = signal("none");
+  const cancels = signal(0);
   let connection: SseConnection | null = null;
   let firstOfConnection: string | null = null;
   let lastRequestHeaders: Record<string, string> = {};
@@ -76,8 +89,8 @@ function SseScreen() {
     lastRequestHeaders = { ...request.headers };
     conns.update((n) => n + 1);
   };
-  const clientOf = (scripts: Script[]) => {
-    const transport = scriptedSse(scripts);
+  const clientOf = (scripts: Script[], onCancel?: () => void) => {
+    const transport = scriptedSse(scripts, onCancel);
     return createClient({
       transport: (request) => {
         record(request);
@@ -159,6 +172,47 @@ function SseScreen() {
     });
   };
 
+  const status404 = (): void => {
+    connection = connectEventSource(
+      clientOf([{ status: 404, pieces: [], then: "hold" }], () => cancels.update((n) => n + 1)),
+      "/events",
+      note,
+      { reconnect: POLICY, onOpen: open, onError: fail },
+    );
+  };
+
+  const wrongType = (): void => {
+    connection = connectEventSource(
+      clientOf([{ status: 200, contentType: "text/plain", pieces: [], then: "hold" }], () =>
+        cancels.update((n) => n + 1),
+      ),
+      "/events",
+      note,
+      { reconnect: POLICY, onOpen: open, onError: fail },
+    );
+  };
+
+  const hugeRetry = (): void => {
+    connection = connectEventSource(
+      clientOf([
+        { pieces: ["id: 1\ndata: a\n\n", `retry: ${"9".repeat(200)}\n`], then: "close" },
+        { pieces: [], then: "hold" },
+      ]),
+      "/events",
+      note,
+      { reconnect: POLICY, onOpen: open, onError: fail, onRetry: (ms) => retryms.set(String(ms)) },
+    );
+  };
+
+  const cleanClose = (): void => {
+    connection = connectEventSource(
+      clientOf([{ pieces: ["id: 1\ndata: a\n\n"], then: "close" }, { pieces: [], then: "hold" }]),
+      "/events",
+      note,
+      { reconnect: { maxRetries: 0, delayMs: 1000, jitter: 0 }, onOpen: open, onError: fail },
+    );
+  };
+
   const cancel = (): void => {
     connection = connectEventSource(clientOf([{ pieces: [], then: "hold" }]), "/events", note, {
       reconnect: POLICY,
@@ -175,6 +229,10 @@ function SseScreen() {
       <Row id="sse-close" label="sse close" onPress={closeable} />
       <Row id="sse-do-close" label="do close" onPress={() => connection?.close()} />
       <Row id="sse-giveup" label="sse giveup" onPress={giveup} />
+      <Row id="sse-status404" label="sse status404" onPress={status404} />
+      <Row id="sse-ctype" label="sse ctype" onPress={wrongType} />
+      <Row id="sse-huge" label="sse huge" onPress={hugeRetry} />
+      <Row id="sse-cleanclose" label="sse cleanclose" onPress={cleanClose} />
       <Row id="sse-cancel" label="sse cancel" onPress={cancel} />
       <Row id="sse-do-cancel" label="do cancel" onPress={() => cancellable.abort()} />
       <Row id="sse-opens" label={`sse-opens ${opens()}`} />
@@ -187,6 +245,7 @@ function SseScreen() {
       <Row id="sse-lasterr" label={`sse-lasterr ${lasterr()}`} />
       <Row id="sse-retryms" label={`sse-retryms ${retryms()}`} />
       <Row id="sse-handle" label={`sse-handle ${handleId()}`} />
+      <Row id="sse-cancels" label={`sse-cancels ${cancels()}`} />
     </View>
   );
 }

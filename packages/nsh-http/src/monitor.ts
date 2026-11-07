@@ -30,8 +30,8 @@ export interface NetworkEvent {
 /** Callback invoked once per finished attempt, registered through the client's observer seam. */
 export type Observer = (event: NetworkEvent) => void;
 
-/** The value a redacted secret leaves behind, in query strings and header maps. */
-export const REDACTED = "[REDACTED]";
+/** The mask a redacted value leaves behind — the Rust monitor's placeholder. */
+export const REDACTED = "[redacted]";
 
 /** How many attempts a monitor keeps when constructed without a capacity. */
 export const DEFAULT_CAPACITY = 200;
@@ -79,7 +79,17 @@ export class Monitor {
    * `Observer` without binding. */
   readonly record = (event: NetworkEvent): void => {
     if (this.sampleRate !== undefined && !(this.random() < this.sampleRate)) return;
-    const kept = this.redact ? { ...event, url: redactUrl(event.url), path: redactPath(event.path) } : event;
+    let kept = event;
+    if (this.redact) {
+      const freeText = (text: string | null): string | null => (text === null ? null : maskSecretHeaders(maskQuery(text)));
+      kept = {
+        ...event,
+        url: maskSecretHeaders(maskQuery(event.url)),
+        path: maskQuery(event.path),
+        error: freeText(event.error),
+        initiator: freeText(event.initiator),
+      };
+    }
     this.buffer.push(kept);
     if (this.buffer.length > this.capacity) this.buffer = this.buffer.slice(-this.capacity);
   };
@@ -94,9 +104,9 @@ export class Monitor {
     return aggregateBy(this.buffer, (event) => event.host);
   }
 
-  /** Aggregates keyed by URL path including its (redacted) query. */
+  /** Aggregates keyed by URL path without its query, mirroring the Rust `path_stats`. */
   byPath(): Record<string, Aggregate> {
-    return aggregateBy(this.buffer, (event) => event.path);
+    return aggregateBy(this.buffer, (event) => event.path.split("?")[0]);
   }
 
   /** Drops every recorded attempt and its aggregates. */
@@ -128,26 +138,82 @@ function percentile(sorted: number[], fraction: number): number {
   return sorted[Math.min(sorted.length - 1, Math.max(0, rank - 1))];
 }
 
-// Query names that carry secrets. Substring rules catch composed names
-// (`access_token`); exact rules keep near-misses like `sortkey` readable.
-const SECRET_PARTS = ["token", "secret", "password", "passwd", "apikey", "accesskey", "signature", "credential", "authorization"];
-const SECRET_NAMES = ["key", "auth", "pwd", "sig", "sid", "session", "sessionid", "cookie", "setcookie"];
+// Query names whose values are secrets, matched normalized: lower-case with `-` and
+// `_` dropped, so `access-token` and `ACCESS_TOKEN` hit too. Kept identical to the
+// Rust monitor's SECRET_QUERY_KEYS for cross-implementation parity.
+const SECRET_QUERY_KEYS = [
+  "token",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
+  "authtoken",
+  "auth",
+  "authorization",
+  "apikey",
+  "key",
+  "secret",
+  "clientsecret",
+  "password",
+  "passwd",
+  "pwd",
+  "session",
+  "sessionid",
+  "jwt",
+  "signature",
+  "sig",
+  "credential",
+  "privatekey",
+];
 
-/** Whether a query-key or header name looks like it carries a secret. Comparisons run
- * on the lowercase name with every non-alphanumeric removed, so `access-token`,
- * `accessToken` and `access%5Ftoken` all match. */
-export function isSecretName(name: string): boolean {
-  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  return SECRET_PARTS.some((part) => normalized.includes(part)) || SECRET_NAMES.includes(normalized);
+// Header names whose values are secrets, matched as lower-case names at name
+// boundaries — the Rust monitor's SECRET_HEADER_NAMES list.
+const SECRET_HEADER_NAMES = [
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "set-cookie",
+  "api-key",
+  "x-api-key",
+  "auth-token",
+  "x-auth-token",
+  "access-token",
+  "x-access-token",
+  "csrf-token",
+  "x-csrf-token",
+  "refresh-token",
+  "id-token",
+  "session-token",
+  "x-session-token",
+  "token",
+  "password",
+  "secret",
+];
+
+// Lower-case and drop `-`/`_`, so `Access_Token` and `api-key` normalize alike.
+function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/[-_]/g, "");
 }
 
-/** Rewrites the query string of `url` (or of a bare `path?query`), leaving everything
- * before `?` and any fragment untouched. */
-function redactQuery(target: string): string {
-  const queryAt = target.indexOf("?");
-  if (queryAt === -1) return target;
-  const head = target.slice(0, queryAt + 1);
-  const rest = target.slice(queryAt + 1);
+/** Whether a query-key or header name looks like it carries a secret. */
+export function isSecretName(name: string): boolean {
+  const normalized = normalizeName(name);
+  return SECRET_QUERY_KEYS.includes(normalized) || SECRET_HEADER_NAMES.includes(normalized);
+}
+
+const SECRET_HEADER_NAMES_NORMALIZED = SECRET_HEADER_NAMES.map(normalizeName);
+
+function isSecretHeaderName(name: string): boolean {
+  return SECRET_HEADER_NAMES_NORMALIZED.includes(normalizeName(name));
+}
+
+/** Masks the values of secret query names; other pairs survive byte-exact.
+ * Everything after the first `?` is treated as the query, so an error message that
+ * quotes a URL loses any secrets past it (the Rust `mask_query`). */
+function maskQuery(text: string): string {
+  const queryAt = text.indexOf("?");
+  if (queryAt === -1) return text;
+  const head = text.slice(0, queryAt + 1);
+  const rest = text.slice(queryAt + 1);
   const fragmentAt = rest.indexOf("#");
   const query = fragmentAt === -1 ? rest : rest.slice(0, fragmentAt);
   const fragment = fragmentAt === -1 ? "" : rest.slice(fragmentAt);
@@ -161,20 +227,76 @@ function redactQuery(target: string): string {
     } catch {
       // Keep the raw name; a broken escape cannot hide a secret name from the raw check.
     }
-    return isSecretName(decoded) ? `${name}=${REDACTED}` : pair;
+    return SECRET_QUERY_KEYS.includes(normalizeName(decoded)) ? `${name}=${REDACTED}` : pair;
   });
   return head + pairs.join("&") + fragment;
 }
 
-/** The URL as it may be recorded: secret query parameters replaced by `REDACTED`. */
+// `]` `}` `)` are not stops: the `[redacted]` placeholder must survive re-masking.
+const HEADER_VALUE_STOPS = new Set(["\n", "\r", '"', "'", "`", ",", ";", "&"]);
+
+/** Masks header-shaped values in free text (the Rust `mask_headers`): after a
+ * sensitive name at a name boundary, an optional closing quote, blanks, then `:` or
+ * `=` (or `,` when the name was quoted), blanks, an optional opening quote, and the
+ * value up to a stop character. */
+function maskSecretHeaders(text: string): string {
+  // ASCII-only lower-casing keeps indexes stable between `lower` and `text`.
+  const lower = text.replace(/[A-Z]/g, (c) => c.toLowerCase());
+  const isNameChar = (at: number): boolean => /[a-z0-9_-]/.test(lower[at] ?? "");
+  const spans: [number, number][] = [];
+  for (const name of SECRET_HEADER_NAMES) {
+    let from = 0;
+    for (;;) {
+      const start = lower.indexOf(name, from);
+      if (start === -1) break;
+      from = start + name.length;
+      const end = start + name.length;
+      if ((start > 0 && isNameChar(start - 1)) || (end < lower.length && isNameChar(end))) continue;
+      let cursor = end;
+      const quotedName = lower[cursor] === '"' || lower[cursor] === "'";
+      if (quotedName) cursor += 1;
+      while (lower[cursor] === " " || lower[cursor] === "\t") cursor += 1;
+      const separator = lower[cursor];
+      const separates = separator === ":" || separator === "=" || (quotedName && separator === ",");
+      if (!separates) continue;
+      cursor += 1;
+      while (lower[cursor] === " " || lower[cursor] === "\t") cursor += 1;
+      const opener = lower[cursor];
+      const hasOpener = opener === '"' || opener === "'" || opener === "`";
+      if (hasOpener) cursor += 1;
+      const value = cursor;
+      while (lower[cursor] !== undefined && !HEADER_VALUE_STOPS.has(lower[cursor])) cursor += 1;
+      if (hasOpener) {
+        const closing = lower.indexOf(opener, value);
+        if (closing !== -1) cursor = closing;
+      }
+      if (cursor > value) spans.push([value, cursor]);
+    }
+  }
+  spans.sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [];
+  for (const [start, end] of spans) {
+    const last = merged[merged.length - 1];
+    if (last !== undefined && start <= last[1]) last[1] = Math.max(last[1], end);
+    else merged.push([start, end]);
+  }
+  let out = text;
+  for (let i = merged.length - 1; i >= 0; i -= 1) {
+    const [start, end] = merged[i];
+    out = out.slice(0, start) + REDACTED + out.slice(end);
+  }
+  return out;
+}
+
+/** The URL as it may be recorded: secret query parameters and header echoes masked. */
 export function redactUrl(url: string): string {
-  return redactQuery(url);
+  return maskSecretHeaders(maskQuery(url));
 }
 
 /** The request path as it may be recorded; also covers the whole-URL path a
  * malformed URL leaves behind. */
 export function redactPath(path: string): string {
-  return redactQuery(path);
+  return maskQuery(path);
 }
 
 /** The header map as it may be logged: every secret-bearing name loses its value.
@@ -182,7 +304,7 @@ export function redactPath(path: string): string {
  * headers beside the monitor. */
 export function redactHeaders(headers: Record<string, string>): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(headers).map(([name, value]) => [name, isSecretName(name) ? REDACTED : value]),
+    Object.entries(headers).map(([name, value]) => [name, isSecretHeaderName(name) ? REDACTED : value]),
   );
 }
 

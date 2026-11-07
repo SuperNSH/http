@@ -1,1 +1,1 @@
-✓ built packages/nsh-http/App.tsx into .nsh/out (36.4 KB js, 96.2 KB bytecode, 10ms)
+✓ built packages/nsh-http/App.tsx into .nsh/out (36.9 KB js, 96.8 KB bytecode, 21ms)

@@ -80,3 +80,22 @@ test("an error status from an upload comes back as http-status with the status",
   await app.press("id:up-error");
   await app.waitFor("text:up-status http-status 500");
 });
+
+test("a caller boundary that collides with a part's content fails loudly", async () => {
+  const app = await showUpload({});
+  await app.press("id:up-collide");
+  await app.waitFor("text:/up-collide-out collision multipart boundary collides/");
+});
+
+test("a boundary outside the RFC 2046 set is rejected, not encoded silently", async () => {
+  const app = await showUpload({});
+  await app.press("id:up-badboundary");
+  await app.waitFor("text:/up-badboundary-out invalid multipart boundary/");
+  expect(app.shows("text:/outside the RFC 2046 set/")).toBeTruthy();
+});
+
+test("a generated boundary gives up after exactly 8 candidates, like the Rust loop", async () => {
+  const app = await showUpload({});
+  await app.press("id:up-reroll");
+  await app.waitFor("text:/up-reroll-out the boundary occurs inside a part's content after 8 candidates/");
+});

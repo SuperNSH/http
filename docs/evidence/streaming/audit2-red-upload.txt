@@ -1,0 +1,10 @@
+✓ bundled packages/nsh-http/tests/unit/upload.app.tsx (26067 B in 17.0 ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › multipart via FormData is encoded by the platform and seen by the route (107ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › encodeMultipart produces the exact multipart bytes and exact total (165ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › an exact body reports encoded and sent progress with real byte counts (91ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › an error status from an upload comes back as http-status with the status (108ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › a caller boundary that collides with a part's content fails loudly (36ms)
+✓ packages/nsh-http/tests/unit/upload.test.ts › a boundary outside the RFC 2046 set is rejected, not encoded silently (79ms)
+✗ packages/nsh-http/tests/unit/upload.test.ts › a generated boundary gives up after exactly 8 candidates, like the Rust loop (5.0s)
+    `text:/up-reroll-out the boundary occurs inside a part's content after 8 candidates/` showing never happened in 5000 ms; on screen: ["up form", "up bytes", "up error", "up encode", "up collide", "up-collide-out pending", "up badboundary", "up-badboundary-out pending", "up reroll", "up-reroll-out multipart boundary collides with a part's content after 8 re-rolls", "up-status pending", "up-encoded -", "up-sent -", "enc-ctype pending", "enc-length pending", "enc-body pending"]
+error 7 tests: 6 passed, 1 failed (5.6s)

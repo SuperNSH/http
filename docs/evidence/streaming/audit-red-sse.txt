@@ -1,0 +1,24 @@
+✓ bundled packages/nsh-http/tests/unit/sse.app.tsx (27433 B in 4.6 ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the parser dispatches id, event, data, multi-line data and retry, skipping comments (9ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a broken stream reconnects and sends Last-Event-ID of the last seen event (78ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › a server retry line overrides the reconnect backoff (2ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › close() during the backoff stops any reconnect (3ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the connection gives up with an error after maxRetries failed connections (2ms)
+✓ packages/nsh-http/tests/unit/sse.test.ts › the caller's signal cancels the stream and nothing reconnects (2ms)
+✗ packages/nsh-http/tests/unit/sse.test.ts › a permanently non-2xx connect ends the source with an error instead of looping (2ms)
+    expected false to be truthy
+    at <anonymous> (packages/nsh-http/tests/unit/sse.test.ts:88:41)
+    on screen: "sse parse", "sse reconnect", "sse retry", "sse close", "do close", "sse giveup", "sse status404", "sse ctype", "sse huge", "sse cancel", "do cancel", "sse-opens 0", "sse-conns 2", "sse-events 0", "sse-errors 2", "sse-last none", "sse-leid none", "sse-firsts ", "sse-lasterr HTTP 404", "sse-retryms none", "sse-handle none", "sse-cancels 0"
+✗ packages/nsh-http/tests/unit/sse.test.ts › a connect without a text/event-stream body ends the source without reconnecting (5.0s)
+    `text:sse-lasterr without a text/event-stream body` showing never happened in 5000 ms; on screen: ["sse parse", "sse reconnect", "sse retry", "sse close", "do close", "sse giveup", "sse status404", "sse ctype", "sse huge", "sse cancel", "do cancel", "sse-opens 1", "sse-conns 1", "sse-events 0", "sse-errors 0", "sse-last none", "sse-leid none", "sse-firsts ", "sse-lasterr none", "sse-retryms none", "sse-handle none", "sse-cancels 0"]
+
+thread 'nsh-engine' (11009322) panicked at /rustc/58cf8f9c35b355199727627d07ae34a4e2846d67/library/core/src/time.rs:962:23:
+cannot convert float seconds to Duration: value is either too big or NaN
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'nsh-tasks' (11008676) panicked at crates/nsh-testing/src/headless/mod.rs:414:13:
+the engine stopped (its thread panicked?): the manual clock cannot move
+✗ packages/nsh-http/tests/unit/sse.test.ts › a huge server retry value is ignored like the Rust u64 parse, so the loop never spins (7ms)
+    task 157 panicked with message "the engine stopped (its thread panicked?): the manual clock cannot move"
+    on screen: "sse parse", "sse reconnect", "sse retry", "sse close", "do close", "sse giveup", "sse status404", "sse ctype", "sse huge", "sse cancel", "do cancel", "sse-opens 0", "sse-conns 0", "sse-events 0", "sse-errors 0", "sse-last none", "sse-leid none", "sse-firsts ", "sse-lasterr none", "sse-retryms none", "sse-handle none", "sse-cancels 0"
+error 9 tests: 6 passed, 3 failed (5.1s)

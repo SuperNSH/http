@@ -51,3 +51,18 @@ green again (`8 passed` package monitor, `4 passed` app, 2026-11-07).
 | T10 | app `start records...` and `the filter narrows...` | `aggregates()` pinned to `[]` | `text:/3 calls/` and `text:/1 call · 100% errors/` never shown (`expected false to be true`) |
 | T11 | app `the filter narrows the calls by host or path` | filter dropped its predicate (returned all rows) | `/slow` still shown under `fast`: `expected true to be false` |
 | T12 | app `when no echo server answers...` | `base.set(null)` deleted after the probe loop | `No echo server answered` never appeared (waitFor timed out on "Looking for the echo server…") |
+
+## Audit fix round (2026-11-07): tests against the pre-fix code
+
+The two tests added for the audit findings ran against the unfixed
+`src/monitor.ts` first; their failures are the observed-before-fixed evidence.
+
+| # | Test | Missing behavior in the pre-fix code | Observed failure |
+|---|---|---|---|
+| A1 | `secrets echoed in error and initiator free text never reach the recorded event (criterion 8)` | `record` masked only `url` and `path`; `error`/`initiator` free text was stored raw | serialized events contained `?token=echo-secret`, `sk-header-echo` and `sid=cookie-echo` verbatim (`not to contain "echo-secret"` fired) |
+| A2 | `path aggregates group by the path without its query, like the Rust path_stats` | `byPath` keyed on the path including its query | `expected ["/slow?delay=1200","/slow"] to equal ["/slow"]` |
+
+Both pass after the fix (10/10 in `monitor.test.ts`). The `List`-experiment
+variants re-run for the evidence file are captured in
+[list-experiment.md](list-experiment.md); they are measurements, not tests, and
+are expected to fail while `Each` is the shipped design.

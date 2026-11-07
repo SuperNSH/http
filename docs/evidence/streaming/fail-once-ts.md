@@ -48,3 +48,42 @@ tests seen failing. Run outputs: `unit-run-1.txt` (first fully green suite),
 `unit-run-2.txt` (rerun landing on the monitor area's concurrent in-flight test,
 which passed on the next full run), `full-run-1.txt` (final all-green run incl. live),
 `live-streaming-run.txt`, `live-sse-run.txt`.
+
+Notes:
+
+- M2 and M9 do not appear: they were drafted mutations (breaking the final `done`
+  progress emit, and nulling the sent-phase byte counts) that were dropped before
+  running because the tests they targeted were already failed by M1/M3 and M8. The
+  numbering kept its original order instead of being renumbered.
+
+## Audit fix round (streaming TS half)
+
+Each changed/new test below was run against the pre-fix code first and observed
+failing (red outputs: `audit-red-sse.txt`, `audit-red-upload.txt`), then the fix
+landed and the test passed. Where a selector was also adjusted during landing, the
+red run still shows the behavioral failure — the pre-fix code did not do the thing
+the test pins.
+
+| Audit item | Test | Observed failure against pre-fix code |
+|---|---|---|
+| 1 — non-2xx connect is terminal (parity with `sse.rs:442`) | a permanently non-2xx connect ends the source with an error instead of looping | pre-fix code retried forever: conns climbed to 2 with errors 2 during the run, and the refused body was never released (`sse-cancels 0`) |
+| 1 — non-event-stream content type is terminal (parity with `sse.rs:456-466`) | a connect without a text/event-stream body ends the source without reconnecting | pre-fix code accepted `text/plain`, consumed the stream and reconnected; no error ever fired |
+| 3 — huge `retry:` value (parity with the `u64` parse at `sse.rs:106-109`) | a huge server retry value is ignored like the Rust u64 parse, so the loop never spins | pre-fix code set `retryMs = Infinity` and the engine's manual clock panicked ("the manual clock cannot move") — worse than a spin |
+| 2 — boundary collision check (parity with `multipart.rs:155-168`, `parts_contain`) | a caller boundary that collides with a part's content fails loudly | pre-fix code encoded the unparseable body silently (`up-collide-out ok 100`) |
+| 2 — boundary charset/length validation (parity with `boundary_error`, `multipart.rs:191`) | a boundary outside the RFC 2046 set is rejected, not encoded silently | pre-fix code accepted `"bad boundary!"` and encoded it (`up-badboundary-out ok 209`) |
+| 4 — refused connect's body is released | covered by the non-2xx test's `sse-cancels 1` assertion (the pre-fix red showed `sse-cancels 0`) | same red run as item 1 |
+
+Item 5 (the M2/M9 numbering gap) is documentation-only, fixed in the Notes above.
+
+## Audit round 2 (two parity nits)
+
+Both tests run against the pre-fix code first (red outputs: `audit2-red-sse.txt`,
+`audit2-red-upload.txt`).
+
+| Nit | Test | Observed failure against pre-fix code |
+|---|---|---|
+| Clean close with `maxRetries: 0` ended the source with "gave up after 0 failed connections" instead of reconnecting like `sse.rs:476-480` | a clean stream end reconnects even with maxRetries 0 — only failed connections count | `sse-opens 1`, last error "gave up after 0 failed connections"; the fix moves the cap check into the failure path only |
+| Generated-boundary cap was 9 candidates (initial + 8 re-rolls) vs Rust's exactly 8 (`multipart.rs:157`), with the old "after 8 re-rolls" wording | a generated boundary gives up after exactly 8 candidates, like the Rust loop | threw with the old wording "multipart boundary collides with a part's content after 8 re-rolls"; the fix counts 8 candidates total and uses Rust's wording plus the count |
+
+The re-roll test pins `crypto.randomUUID` to an all-zero UUID inside the test app so
+every candidate collides with the part and the cap is reached deterministically.
