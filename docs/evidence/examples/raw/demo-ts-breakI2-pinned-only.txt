@@ -1,0 +1,8 @@
+✓ bundled examples/demo-ts/App.tsx (29205 B in 8.4 ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › base discovery › when nothing in the port window answers, the screen says so (13ms)
+✗ examples/demo-ts/tests/unit/demo.test.ts › base discovery › the demo finds a server deeper in the window — the 8123-already-taken case (5.0s)
+    `text:base http://127.0.0.1:8125` showing never happened in 5000 ms; on screen: ["base none (ports 8123..8132)", "waiting for the echo server"]
+✓ examples/demo-ts/tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (198ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (442ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (113ms)
+error 5 tests: 4 passed, 1 failed (5.8s)

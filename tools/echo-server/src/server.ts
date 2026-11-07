@@ -10,6 +10,18 @@ const ECHO_DIR = join(import.meta.dir, "..");
 // Bun's default idle timeout would cut off slow routes and look like an abort.
 const IDLE_TIMEOUT = 0;
 const MAX_BYTES = 100_000_000;
+// CORS: sandbox tooling for local tests and demos, so the default is
+// permissive on purpose — the nsh web host's page is cross-origin to this
+// server. OPTIONS preflights are answered before routing and stay out of the
+// log: they are browser plumbing, and a logged preflight would pollute the
+// criterion-9 aborted-line proof and every /log tail.
+const CORS_HEADERS: Record<string, string> = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, authorization, last-event-id",
+  "access-control-expose-headers": "content-length, content-type, etag, retry-after",
+  "access-control-max-age": "86400",
+};
 
 interface ServerOpts {
   /** Defaults: ECHO_LOG_PATH, else .runtime.log (temp file under bun test). */
@@ -318,9 +330,13 @@ function createFetchHandler(state: AppState, log: JsonLog) {
     const url = new URL(request.url);
     const id = crypto.randomUUID();
     const startedAt = performance.now();
-    // /log reads the log; logging it would append to the very tail the next
-    // reader is about to fetch, so it stays out of its own answer.
-    const quiet = url.pathname === "/log";
+    // /log reads the log, so logging it would append to the very tail the
+    // next reader is about to fetch; a preflight is not a request at all.
+    // Both stay out of their own answers.
+    const quiet = url.pathname === "/log" || request.method === "OPTIONS";
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: new Headers(CORS_HEADERS) });
+    }
     const write = (record: Record<string, unknown>) => {
       if (!quiet) log.write(record);
     };
@@ -373,6 +389,9 @@ function createFetchHandler(state: AppState, log: JsonLog) {
     } catch (err) {
       response = json({ error: "internal_error", message: String(err) }, 500);
     }
+    for (const [name, value] of Object.entries(CORS_HEADERS)) {
+      response.headers.set(name, value);
+    }
     if (!deferred) complete(response.status);
     return response;
   };
@@ -408,6 +427,39 @@ async function verifyHealth(port: number): Promise<boolean> {
   return false;
 }
 
+// The pinned default and its fallback window, defined once and mirrored by the
+// repository README and examples/demo-ts's probe: a port taken (EADDRINUSE)
+// falls through to the next in 8123..8132, so a second server — the clean-clone
+// case where another checkout's server already holds 8123 — still starts and
+// names its ACTUAL port in .runtime.json.
+const PINNED_PORT = 8123;
+const WINDOW_END = 8132;
+
+function isAddressInUse(error: unknown): boolean {
+  const { code, message } = (error ?? {}) as { code?: string; message?: string };
+  return /in use|eaddrinuse/i.test(`${code ?? ""} ${message ?? ""}`);
+}
+
+function bindServer(port: number, state: AppState, log: JsonLog): Bun.Server {
+  const candidates =
+    port === 0 ? [0] : [port, ...Array.from({ length: WINDOW_END - PINNED_PORT + 1 }, (_, i) => PINNED_PORT + i).filter((p) => p !== port)];
+  let lastError: unknown;
+  for (const candidate of candidates) {
+    try {
+      return Bun.serve({
+        hostname: HOST,
+        port: candidate,
+        idleTimeout: IDLE_TIMEOUT,
+        fetch: createFetchHandler(state, log),
+      });
+    } catch (error) {
+      if (!isAddressInUse(error)) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
 export async function start(opts: ServerOpts = {}): Promise<EchoServerHandle> {
   const { logPath, runtimePath } = resolvePaths(opts);
   const log = createJsonLog(logPath);
@@ -415,12 +467,7 @@ export async function start(opts: ServerOpts = {}): Promise<EchoServerHandle> {
   // ECHO_PORT pins the port because nsh test VMs on 0.4.0 cannot read .runtime.json —
   // live suites and apps can only find the server on a port known in advance.
   const requested = process.env.ECHO_PORT ? Number(process.env.ECHO_PORT) : 0;
-  const server = Bun.serve({
-    hostname: HOST,
-    port: requested,
-    idleTimeout: IDLE_TIMEOUT,
-    fetch: createFetchHandler(state, log),
-  });
+  const server = bindServer(requested, state, log);
   const port = server.port;
 
   // The port file is the contract: it appears only once /health provably answers.

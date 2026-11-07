@@ -2,9 +2,18 @@ import { mount, platform, signal, Storage, Text, View, Scroll } from "nsh";
 import { createClient, type Aggregate, type HttpClient, type NetworkEvent, type Observer, instrumentedFetch, Monitor } from "nsh-http";
 import { SearchInput } from "./ui/input";
 
-// The echo server is pinned to 127.0.0.1:8123 on the host; the Android emulator
-// reaches it as 10.0.2.2. Exactly one of the candidates answers.
-const CANDIDATES = ["http://127.0.0.1:8123", "http://10.0.2.2:8123"];
+// README's port contract: the echo server pins to 127.0.0.1:8123 and falls through
+// 8123..8132 on EADDRINUSE; the Android emulator reaches the host as 10.0.2.2. The
+// screen sweeps the same window per host, host first, ports ascending.
+const WINDOW_START = 8123;
+const WINDOW_END = 8132;
+const CANDIDATES = [
+  ...Array.from({ length: WINDOW_END - WINDOW_START + 1 }, (_, i) => `http://127.0.0.1:${WINDOW_START + i}`),
+  ...Array.from({ length: WINDOW_END - WINDOW_START + 1 }, (_, i) => `http://10.0.2.2:${WINDOW_START + i}`),
+];
+// Per-candidate probe budget: candidates with nothing behind them reject at once
+// (refused) or at this timeout, so the sweep stays bounded.
+const PROBE_TIMEOUT = 500;
 
 function CallRow(props: { event: () => NetworkEvent }) {
   return (
@@ -50,7 +59,7 @@ function App() {
     const probe = instrumentedFetch({ onEvent: ingest, initiator: "probe" });
     for (const candidate of CANDIDATES) {
       try {
-        const response = await probe(`${candidate}/health`);
+        const response = await probe(`${candidate}/health`, { signal: AbortSignal.timeout(PROBE_TIMEOUT) });
         const body = (await response.json()) as { ok?: unknown };
         if (response.ok && body.ok === true) {
           base.set(candidate);
@@ -58,7 +67,7 @@ function App() {
           return;
         }
       } catch {
-        // Nothing answered on this host; the next candidate, or the none state, follows.
+        // Nothing answered here; the next candidate, or the none state, follows.
       }
     }
     base.set(null);
@@ -79,7 +88,7 @@ function App() {
 
   const baseLine = () => {
     if (base() === undefined) return "Looking for the echo server…";
-    if (base() === null) return `No echo server answered on ${CANDIDATES.join(" or ")}`;
+    if (base() === null) return `No echo server answered — none (ports ${WINDOW_START}..${WINDOW_END})`;
     return `Recording calls on ${base()}`;
   };
 
@@ -107,7 +116,8 @@ function App() {
       {/* Each, not List: the ring buffer bounds this collection, and on 0.4.0 a List
           keeps rows in insertion order whenever an update reorders the array — a fresh
           sorted copy assigned in one shot, with or without keyExtractor, still renders
-          the slow call (which lands last) at the bottom; Each reorders correctly. */}
+          the slow call (which lands last) at the bottom; Each reorders correctly.
+          Evidence: docs/evidence/monitor/list-experiment.md. */}
       <Scroll class="flex-1" testID="call-list">
         <View class="px-4 pb-4">
           <If when={visible().length === 0}>

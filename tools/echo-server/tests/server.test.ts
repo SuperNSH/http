@@ -306,6 +306,47 @@ describe("/bytes/:n", () => {
   });
 });
 
+describe("CORS", () => {
+  test("every answer carries the permissive CORS headers", async () => {
+    for (const [method, path] of [
+      ["GET", "/fast"],
+      ["POST", "/echo"],
+      ["GET", "/definitely/not/here"],
+    ] as const) {
+      const res = await fetch(`${base}${path}`, { method, headers: { origin: "http://127.0.0.1:8799" } });
+      expect(res.headers.get("access-control-allow-origin")).toBe("*");
+      expect(res.headers.get("access-control-allow-methods")).toContain("POST");
+      expect(res.headers.get("access-control-allow-headers")).toContain("content-type");
+      expect(res.headers.get("access-control-allow-headers")).toContain("authorization");
+    }
+  });
+
+  test("an OPTIONS preflight answers 204 with the CORS headers and no body", async () => {
+    const res = await fetch(`${base}/slow`, {
+      method: "OPTIONS",
+      headers: {
+        origin: "http://127.0.0.1:8799",
+        "access-control-request-method": "GET",
+        "access-control-request-headers": "content-type",
+      },
+    });
+    expect(res.status).toBe(204);
+    expect(await res.text()).toBe("");
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    expect(res.headers.get("access-control-allow-methods")).toContain("GET");
+    expect(res.headers.get("access-control-allow-headers")).toContain("authorization");
+    expect(res.headers.get("access-control-max-age")).toBe("86400");
+  });
+
+  test("a preflight writes nothing to the log", async () => {
+    await srv.flushLog();
+    const before = readLog();
+    await fetch(`${base}/slow`, { method: "OPTIONS", headers: { origin: "http://127.0.0.1:8799" } });
+    await srv.flushLog();
+    expect(readLog()).toEqual(before);
+  });
+});
+
 describe("/log", () => {
   test("returns the last tail lines as parsed JSON, oldest first", async () => {
     await srv.flushLog();
@@ -421,7 +462,64 @@ describe("request log", () => {
 });
 
 describe("start-up contract", () => {
-  test("a real start writes the runtime file only after /health answers, and honors ECHO_LOG_PATH", async () => {
+	test("a pinned port already in use falls through the 8123..8132 window, and each server records its ACTUAL port", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "nsh-http-echo-fallback-"));
+		const spawnOn = (runtimeName: string) =>
+			Bun.spawn(["bun", "run", "src/server.ts"], {
+				cwd: join(import.meta.dir, ".."),
+				env: {
+					...process.env,
+					ECHO_PORT: "8123",
+					ECHO_LOG_PATH: join(dir, `${runtimeName}.log`),
+					ECHO_RUNTIME_PATH: join(dir, `${runtimeName}.json`),
+				},
+				stdout: "pipe",
+				stderr: "pipe",
+			});
+		const readRuntime = async (runtimePath: string): Promise<{ port: number; pid: number } | null> => {
+			try {
+				return await Bun.file(runtimePath).json();
+			} catch {
+				return null; // not written yet — the server only writes it once /health answered
+			}
+		};
+		const first = spawnOn("first");
+		const second = spawnOn("second");
+		try {
+			let a: { port: number; pid: number } | null = null;
+			let b: { port: number; pid: number } | null = null;
+			for (let i = 0; i < 200 && !(a && b); i++) {
+				await sleep(50);
+				a ??= await readRuntime(join(dir, "first.json"));
+				b ??= await readRuntime(join(dir, "second.json"));
+			}
+			expect(a).not.toBeNull();
+			expect(b).not.toBeNull();
+			// Both landed inside the documented window, on distinct ports: the
+			// second did not die on the first's port and did not reuse it.
+			for (const one of [a!, b!]) {
+				expect(one.port).toBeGreaterThanOrEqual(8123);
+				expect(one.port).toBeLessThanOrEqual(8132);
+			}
+			expect(b!.port).not.toBe(a!.port);
+			expect(b!.pid).not.toBe(a!.pid);
+			// Each runtime file names its own server, and each server answers.
+			expect(first.pid).toBe(a!.pid);
+			expect(second.pid).toBe(b!.pid);
+			for (const one of [a!, b!]) {
+				const health = await fetch(`http://127.0.0.1:${one.port}/health`);
+				expect(health.status).toBe(200);
+				expect(await health.json()).toEqual({ ok: true });
+			}
+		} finally {
+			first.kill();
+			second.kill();
+			await first.exited;
+			await second.exited;
+		}
+	}, 30000);
+
+	test("a real start writes the runtime file only after /health answers, and honors ECHO_LOG_PATH", async () => {
     const dir = await mkdtemp(join(tmpdir(), "nsh-http-echo-contract-"));
     const logPath = join(dir, "runtime.log");
     const runtimePath = join(dir, "runtime.json");

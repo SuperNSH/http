@@ -1,0 +1,8 @@
+✓ bundled App.tsx (36717 B in 8.1 ms)
+✓ tests/unit/demo.test.ts › base discovery › when nothing in the port window answers, the screen says so (13ms)
+✓ tests/unit/demo.test.ts › base discovery › the demo finds a server deeper in the window — the 8123-already-taken case (2ms)
+✗ tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (5.0s)
+    `text:fast` showing never happened in 5000 ms; on screen: ["nsh-http demo", "base http://127.0.0.1:8123", "Back", "Echo", "Two routes through the client; the observer stamps every attempt.", "Load /fast", "Load /slow", "Fast route", "broken on purpose", "Fast call, observed", "fast · status 200 · 0 ms · ttfb 0 ms", "Slow route (1200 ms)", "…", "Slow call, observed", "no call observed yet"]
+✓ tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (447ms)
+✓ tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (114ms)
+error 5 tests: 4 passed, 1 failed (5.6s)

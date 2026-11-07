@@ -1,0 +1,4 @@
+capture: saved docs/evidence/examples/demo-ts-echo.png
+✗ examples/demo-ts/tests/capture/demo.test.ts › captures the demo screens (8.4s)
+    `text:/^yes/` showing never happened in 5000 ms; on screen: ["nsh-http demo", "base http://127.0.0.1:8123", "Back", "Query", "An nsh-query load against /slow; replacing it cancels the request on the wire.", "Replace query", "Check the log", "Topic (the query key)", "2", "Load", "success", "Route", "slow", "Server log check", "not checked"]
+error 1 test: 0 passed, 1 failed (8.4s)

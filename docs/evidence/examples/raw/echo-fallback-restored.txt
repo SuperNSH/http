@@ -1,0 +1,51 @@
+$ bun test
+bun test v1.4.4 (38afee6c8)
+
+tests/server.test.ts:
+echo-server listening on 127.0.0.1:51951 (pid 34561), runtime file disabled
+(pass) simple routes > /health -> 200 {ok:true} [0.25ms]
+(pass) simple routes > /fast -> {route:'fast'} [0.21ms]
+(pass) simple routes > /slow waits the requested delay and echoes it [81.52ms]
+(pass) simple routes > /slow without a delay param defaults to 1000 [1001.71ms]
+(pass) simple routes > /status/:code responds with the code [1.50ms]
+(pass) simple routes > /status/204 and /status/304 return the code with no body [0.51ms]
+(pass) simple routes > /status/out-of-range -> 400 [0.56ms]
+(pass) simple routes > unknown path -> 404 JSON error [0.21ms]
+(pass) simple routes > wrong method -> 405 with Allow [0.25ms]
+(pass) /flaky > first N hits 503 with Retry-After: 1, then 200 [0.79ms]
+(pass) /flaky > fail counters are independent per fail value [0.40ms]
+(pass) /etag > returns an ETag and a body [0.32ms]
+(pass) /etag > If-None-Match match -> 304 with empty body [0.37ms]
+(pass) /etag > non-matching If-None-Match -> 200 [0.15ms]
+(pass) /stream > emits one ndjson chunk per tick with the right count [33.25ms]
+(pass) /sse > emits count events with ids 1..count [17.71ms]
+(pass) /sse > Last-Event-ID replays from that id [17.38ms]
+(pass) /sse > Last-Event-ID beyond count closes with no events [0.41ms]
+(pass) /multipart > echoes fields and files as JSON parts [0.70ms]
+(pass) /multipart > non-multipart body -> 400 [0.21ms]
+(pass) /token > Bearer expired -> 401 {error:'expired'} [0.23ms]
+(pass) /token > Bearer refreshed -> 200 {ok:true} [0.14ms]
+(pass) /token > missing or unknown credentials -> 401 [0.28ms]
+(pass) /echo > POST echoes method, path and parsed JSON body [0.28ms]
+(pass) /echo > GET echoes its method and query string; non-JSON bodies echo as strings [0.41ms]
+(pass) /redirect > /redirect/refused 302s to the undeclared host refused.invalid [0.19ms]
+(pass) /redirect > /redirect/local 302s to /fast and resolves through fetch [0.44ms]
+(pass) /bytes/:n > returns n bytes with Content-Length [0.28ms]
+(pass) /bytes/:n > bad or oversized n -> 400 [0.31ms]
+(pass) /log > returns the last tail lines as parsed JSON, oldest first [0.71ms]
+(pass) /log > tail beyond the log's length returns every line there is [0.44ms]
+echo-server listening on 127.0.0.1:51960 (pid 34561), runtime file disabled
+(pass) /log > default tail is 20; an empty log answers {lines: []} [2.38ms]
+(pass) /log > reading /log appends nothing to the log, so the next tail is stable [0.65ms]
+(pass) /log > wrong method -> 405 [0.18ms]
+(pass) request log > completed requests pair a start line with an end line carrying status and ms [0.53ms]
+(pass) request log > client abort during /slow logs aborted and no end line [453.26ms]
+(pass) request log > client abort mid-/stream logs aborted and no end line [252.90ms]
+(pass) request log > /sse abort also lands in the log (cancellation proof for streams) [202.68ms]
+(pass) start-up contract > a pinned port already in use falls through the 8123..8132 window, and each server records its ACTUAL port [55.81ms]
+(pass) start-up contract > a real start writes the runtime file only after /health answers, and honors ECHO_LOG_PATH [206.05ms]
+
+ 40 pass
+ 0 fail
+ 136 expect() calls
+Ran 40 tests across 1 file. [2.35s]

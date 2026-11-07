@@ -85,8 +85,8 @@ mkdir -p node_modules
 ln -s ../../../packages/nsh-http node_modules/nsh-http
 ```
 
-(`node_modules/` sits two directories below the repository root, so the target needs three `../`. A sibling
-repository such as `nsh-query` is outside the checkout — link it by absolute path.)
+(`examples/<app>/node_modules/` is three levels below the repository root, so the relative target needs three
+`../`. A sibling repository such as `nsh-query` is outside the checkout — link it by absolute path.)
 
 ```tsx
 import { signal, Text, View } from "nsh";
@@ -157,16 +157,27 @@ From a clean clone to the demo running against the local echo server. Prerequisi
 stable, and the `nsh-query` checkout cloned alongside this one (`~/fo/nsh-query` below; adjust the path to yours)
 — the demo's query screen consumes its package read-only by symlink.
 
-Start the echo server on the pinned port (test VMs cannot read `.runtime.json` or the environment, so the port is
-fixed and known before any app runs):
+**The port contract.** The echo server's pinned default is `127.0.0.1:8123`; test VMs on 0.4.0 cannot read files
+or inherit environment, so the port must be known before an app runs. When that port is taken (`EADDRINUSE` —
+another checkout's server, another project), the server falls through the window **8123..8132** in ascending
+order before giving up, and records the ACTUAL chosen port in `tools/echo-server/.runtime.json`. The two demos
+find a server anywhere in that window: the TypeScript app probes `/health` across it live (127.0.0.1 first, then
+`10.0.2.2` — the Android emulator's host loopback — with a 500 ms budget per candidate, first responder wins);
+the Rust app reads `.runtime.json` and honors `ECHO_PORT`. These numbers are defined here and in
+`tools/echo-server/src/server.ts`; change both together.
+
+Start the echo server on the pinned port:
 
 ```sh
 (cd tools/echo-server && ECHO_PORT=8123 nohup bun run src/server.ts >/tmp/nsh-http-echo.log 2>&1 &)
-curl -sf http://127.0.0.1:8123/health        # {"ok":true}
+cat tools/echo-server/.runtime.json           # {"port":8123,...} — or the window port it fell through to
+curl -sf http://127.0.0.1:$(sed -n 's/.*"port":\([0-9]*\).*/\1/p' tools/echo-server/.runtime.json)/health
 ```
 
-TypeScript demo — link the two packages, then run it; the app probes `/health` on
-`127.0.0.1:8123` (and `10.0.2.2:8123` on the Android emulator) and shows the base once found:
+If another server already holds 8123 (the usual clean-clone surprise), this start does not fail: it lands on the
+first free port in 8123..8132, the runtime file names it, and both demos still find it — read on.
+
+TypeScript demo — link the two packages, then run it:
 
 ```sh
 cd examples/demo-ts
@@ -177,20 +188,31 @@ cd ../..
 nsh run examples/demo-ts
 ```
 
+The app's first line probes the window and shows what answered — `base http://127.0.0.1:8123`, or the window
+port a fresh server fell through to, or `base none (ports 8123..8132)` when nothing did.
+
 Three screens: **Echo** loads `/fast` and `/slow?delay=1200` and shows each call's status, duration and time to
 first byte from the client's observer. **Query** runs an `nsh-query` load against `/slow?delay=3000`; **replace
 query** moves to a new key while the old request is in flight, and **check log** reads the server's own log back
 over `GET /log` to prove the dead request was aborted on the wire. **Auth** fires three parallel requests with an
 expired token; the screen shows one refresh and three successes.
 
-Rust demo — same flows without the query screen:
+Rust demo — the Echo and Auth flows; the query-cancel leg is TS-only (its wire
+proof needs a real target, which the TS capture above provides):
 
 ```sh
 nsh run examples/demo-rs          # or: cargo run --manifest-path examples/demo-rs/Cargo.toml
 ```
 
+It prints `base http://127.0.0.1:<port>` for the server its port resolution found: `ECHO_PORT` if set, else the
+`.runtime.json` written at start-up (so a fresh server that fell through the window is found without extra
+steps), else the pinned 8123.
+
 Both demos auto-report one line per outcome. Their tests drive the same screens: stubs and a manual clock in
 `examples/demo-rs/tests/demo.rs` and `examples/demo-ts/tests/unit/`, the real server in each area's live tests, and
 `app.screenshot` captures into `docs/evidence/examples/` from
 `nsh test examples/demo-ts/tests/capture/demo.test.ts --target macos` and
-`nsh test examples/demo-rs/tests/capture/demo.test.ts --target macos`.
+`nsh test examples/demo-rs/tests/capture/demo.test.ts --target macos`. One platform caveat, upstream on 0.4.0:
+under `nsh test --target web` the page's `nsh` module lacks the `lifecycle` export, so the TS demo — which uses
+nsh-query — cannot load there; its web capture does not exist and the tests skip loudly naming
+[docs/upstream-issues.md](docs/upstream-issues.md) (`nsh run --target web` works; native targets work).

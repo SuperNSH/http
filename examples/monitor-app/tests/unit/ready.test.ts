@@ -54,7 +54,9 @@ test("the filter narrows the calls by host or path", async () => {
 test("when no echo server answers, the screen says so and records the failed probes", async () => {
   const app = await open("../../App.tsx", { clock: {}, network: {} });
   await app.waitFor("text:/No echo server answered/");
-  // One failed probe per candidate host, each with its own aggregate row.
+  // The none message names README's whole fallback window, not just the pinned port.
+  expect(app.shows("text:/none \\(ports 8123\\.\\.8132\\)/")).toBe(true);
+  // One failed probe per window port per host, each host with its own aggregate row.
   expect(app.count("id:host-agg")).toBe(2);
-  expect(app.shows("text:/1 call · 100% errors/")).toBe(true);
+  expect(app.shows("text:/10 calls · 100% errors/")).toBe(true);
 });

@@ -1,5 +1,6 @@
-// Capture: opens the Rust demo against the live echo server on a real target
-// and saves its window to docs/evidence/examples/demo-rs-macos.png via
+// Capture: opens the Rust demo (the echo and auth legs — the query-cancel leg
+// is TS-only, see README) against the live echo server on a real target and
+// saves its window to docs/evidence/examples/demo-rs-macos.png via
 // app.screenshot. `open("../..")` starts the root `nsh.json` names, in the
 // headless runner built with this crate. Only a real target draws the app, so
 // run it from the repository root with:

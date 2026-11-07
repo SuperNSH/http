@@ -1,10 +1,10 @@
 //! The nsh-http demo for Rust apps: fast and slow echo calls with their
 //! observed timings, and three parallel requests on an expired token going
-//! through the provider's single-flight refresh. The suite runs once on
-//! mount and reports one line per outcome — the same flows as
-//! `examples/demo-ts`. `tests/demo.rs` drives it on stubs, `tests/live.rs`
-//! against the real echo server, and `tests/capture` photographs it on a
-//! real target.
+//! through the provider's single-flight refresh — the echo and auth flows of
+//! `examples/demo-ts` (its query-cancel screen is TS-only). The suite runs
+//! once on mount and reports one line per outcome. `tests/demo.rs` drives it
+//! on stubs, `tests/live.rs` against the real echo server, and `tests/capture`
+//! photographs it on a real target.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -36,8 +36,10 @@ struct TokenOk {
     ok: bool,
 }
 
-/// The echo server's port: `ECHO_PORT`, else the server's `.runtime.json`,
-/// else the documented pinned default (README's Demo section).
+/// The echo server's port: `ECHO_PORT`, else the server's `.runtime.json`
+/// (which names the actual port even when the pinned default was taken and
+/// the server fell through the README's 8123..8132 window), else the pinned
+/// default.
 fn echo_port() -> u16 {
     if let Ok(raw) = std::env::var("ECHO_PORT") {
         return raw.parse().expect("ECHO_PORT parses");
@@ -146,13 +148,41 @@ async fn run_suite(lines: Signal<Vec<String>>) {
 pub fn App() -> impl IntoElement {
     let lines = signal(Vec::<String>::new());
     spawn(run_suite(lines));
-    view()
-        .flex_1()
-        .bg(move || theme().background)
-        .text_color(move || theme().foreground)
-        .child(view().flex_1().p_safe_area().child(each(
-            lines,
-            |line| line.clone(),
-            |line, _index| text(move || line.get()).text_size(px(13.0)),
-        )))
+    // The suite's lines are immutable once pushed, so a row's kind (result,
+    // observed event, or marker) is decided once, from its own text: results
+    // read as foreground body text, events and the marker as muted meta.
+    view().flex_1().bg(move || theme().background).child(
+        view()
+            .flex_1()
+            .gap(px(10.0))
+            .p(px(16.0))
+            .p_safe_area()
+            .child(
+                text("nsh-http demo")
+                    .text_size(px(20.0))
+                    .text_color(move || theme().foreground),
+            )
+            .child(
+                text("echo and auth flows against the echo server")
+                    .text_size(px(13.0))
+                    .text_color(move || theme().muted_foreground),
+            )
+            .child(each(
+                lines,
+                |line| line.clone(),
+                |line, _index| {
+                    let value = line.get();
+                    let meta = value.starts_with("event ")
+                        || value.starts_with("base ")
+                        || value == "DEMO-RS-DONE";
+                    let size = if meta { px(12.0) } else { px(14.0) };
+                    let color = if meta {
+                        theme().muted_foreground
+                    } else {
+                        theme().foreground
+                    };
+                    text(move || line.get()).text_size(size).text_color(color)
+                },
+            )),
+    )
 }

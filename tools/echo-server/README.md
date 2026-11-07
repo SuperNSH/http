@@ -10,8 +10,17 @@ so the port must be known before the app runs:
     (cd tools/echo-server && ECHO_PORT=8123 nohup bun run src/server.ts >/tmp/nsh-http-echo.log 2>&1 &)
 
 `ECHO_PORT` overrides the port; plain `bun run src/server.ts` binds a random free
-port — the mode the test suite exercises. Either way the port is recorded in
-`.runtime.json` once `/health` answers.
+port — the mode the test suite exercises.
+
+## The port contract (numbers defined in the repository README)
+
+Pinned default 8123; when it (or a requested port) is taken — `EADDRINUSE` — the
+server falls through the window **8123..8132** in ascending order before giving
+up, so a clean clone can start its own server while another checkout's holds
+8123. Either way the ACTUAL chosen port is recorded in `.runtime.json` once
+`/health` answers; that file is the one source of the running server's port
+(Rust demo: read it; TSX demo: probe the same window live). The test suite
+spawns two pinned servers to cover the fallback.
 
 Run the tests:
 
@@ -58,3 +67,10 @@ runtime file is not written at all unless `ECHO_RUNTIME_PATH` is set).
 
 `/slow`, `/stream` and `/sse` watch the request's abort signal; a client that
 disconnects early makes the server log an `aborted` line for that request.
+
+Every response carries permissive CORS headers (`Access-Control-Allow-Origin:
+*`, methods GET/POST/PUT/PATCH/DELETE/OPTIONS, headers content-type,
+authorization, last-event-id) and an `OPTIONS` preflight answers 204 with the
+same headers — sandbox tooling for the nsh web host, whose page is cross-origin
+to this server. Preflights are also not logged (browser plumbing would
+pollute the criterion-9 log).

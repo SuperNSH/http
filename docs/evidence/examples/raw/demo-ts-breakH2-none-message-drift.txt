@@ -1,0 +1,7 @@
+✓ bundled examples/demo-ts/App.tsx (29231 B in 23.0 ms)
+✗ examples/demo-ts/tests/unit/demo.test.ts › base discovery › when nothing in the port window answers, the screen says so (5.0s)
+    `text:base none (ports 8123..8132)` showing never happened in 5000 ms; on screen: ["base none (ports 8123..8131)", "waiting for the echo server"]
+✓ examples/demo-ts/tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (267ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (650ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (120ms)
+error 4 tests: 3 passed, 1 failed (6.1s)

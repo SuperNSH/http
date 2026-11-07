@@ -75,3 +75,36 @@ Workaround in this repo: the demo's replace button calls `queryClient.cancel(["p
 key (`examples/demo-ts/App.tsx`, QueryScreen), and the wire proof (`examples/demo-ts/tests/live/abort.test.ts`)
 asserts the server saw the abort. Upstream fix, if wanted: a `cancelOnReplace` option (default off to keep
 TanStack parity).
+
+## 5. The `nsh test --target web` page's `nsh` module does not export `lifecycle` (and `computed` behaves differently than on other targets)
+
+Severity: high for any TSX app that imports the affected names on web (here: every nsh-query-using app); invisible
+elsewhere.
+
+Under `nsh test --target web`, the generated facade for the `"nsh"` module does not provide `lifecycle`: a bundle
+whose import graph reaches it fails to LINK — the page reports `SyntaxError: The requested module 'nsh' does not
+provide an export named 'lifecycle'` — and nothing evaluates, not even the app's first frame. The dev page
+(`nsh run --target web`) exports the name (the identical bundle renders there), and headless/QuickJS and the
+native targets have it; only the test web page lacks it. Consistent with the sources: `lifecycle` appears
+nowhere in `crates/nsh-platform-web/web/browser/` on 0.4.0 (`reactive.js`'s `createReactive` returns
+`signal, computed, effect, cleanup, batch, untracked, root, context, split, getOwner, runWithOwner, renderEffect,
+ErrorBoundary, protect` — no `lifecycle`), so the test page has nothing to export.
+
+Measured by name, minimal apps under `nsh test --target web`: `effect`, `untracked`, `cleanup`, and `computed`
+imported and unused all link and render; `lifecycle` imported fails to link; a `computed()` **called at module
+scope** also blanks the page (the same import unused renders — a second, smaller quirk of the test realm).
+
+Consequence here: `nsh-query`'s compiled code imports `lifecycle` (its `refetchOnForeground`/`refetchInterval`
+logic), so **any TSX app that uses nsh-query cannot load under `nsh test --target web` on 0.4.0** —
+`examples/demo-ts` included. The bundler does not split dynamic imports into separately linked chunks, so
+`await import("nsh-query")` fails the same way at load time and is not a workaround (measured).
+
+Evidence: the harness page's own problem banner captured in
+`docs/evidence/examples/web-missing-lifecycle.png` (taken via `app.screenshot` during the failing capture), plus
+the name-by-name probe results summarized above (raw outputs in `docs/evidence/examples/raw/`, this fix round).
+
+Workaround in this repo: none that keeps nsh-query in the web bundle. `examples/demo-ts`'s capture and live tests
+detect the never-rendering page (nothing matches `text:/^base /` within 8 s) and skip loudly naming this entry;
+the demo's web capture therefore does not exist on 0.4.0, and the wire proofs run on macos/ios/android.
+Upstream fix: provide `lifecycle` (ideally the full reactive export set) in the test web page's `"nsh"` module,
+as the dev page effectively does.

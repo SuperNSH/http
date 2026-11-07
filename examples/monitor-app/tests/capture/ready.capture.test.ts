@@ -1,4 +1,5 @@
-// LIVE: captures the ready screen against the real echo server (127.0.0.1:8123), so
+// LIVE: captures the ready screen against the real echo server (README's port
+// contract: pinned 127.0.0.1:8123, falling through 8123..8132 on EADDRINUSE), so
 // durationMs and ttfbMs are the device's honest timings (satisfaction criterion 7).
 // A headless run asserts the live behavior but draws nothing, so the screenshot needs
 // a target: the device operator captures per target with e.g.
@@ -7,13 +8,14 @@
 // Storage, because test VMs cannot read the caller's environment).
 import { expect, open, test } from "nsh/test";
 
-const CANDIDATES = ["http://127.0.0.1:8123", "http://10.0.2.2:8123"];
+const WINDOW_START = 8123;
+const WINDOW_END = 8132;
 
 test("the ready screen shows live slow and fast calls, slow on top, and captures per target", async () => {
   const app = await open("../../App.tsx", { network: "live" });
   await app.waitFor("text:/Recording calls|No echo server answered/");
-  if (app.shows("text:/No echo server answered/")) {
-    console.log(`SKIP (live): no echo server answered (candidates: ${CANDIDATES.join(", ")})`);
+  if (app.shows(`text:/none \\(ports ${WINDOW_START}\\.\\.${WINDOW_END}\\)/`)) {
+    console.log(`SKIP (live): no echo server answered (none (ports ${WINDOW_START}..${WINDOW_END}))`);
     return;
   }
   await app.waitFor("text:/slow\\?delay=1200/", { timeout: 20_000 });

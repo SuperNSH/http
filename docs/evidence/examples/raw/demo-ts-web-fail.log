@@ -1,0 +1,3 @@
+✗ examples/demo-ts/tests/capture/demo.test.ts › captures the demo screens (1.1s)
+    no pressable view matches `id:open-Echo`; on screen: []
+error 1 test: 0 passed, 1 failed (1.4s)

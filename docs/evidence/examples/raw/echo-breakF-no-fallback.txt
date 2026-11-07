@@ -1,0 +1,26 @@
+$ bun test -t "start-up contract"
+bun test v1.4.4 (38afee6c8)
+
+tests/server.test.ts:
+echo-server listening on 127.0.0.1:51581 (pid 32073), runtime file disabled
+450 | 			for (let i = 0; i < 200 && !(a && b); i++) {
+451 | 				await sleep(50);
+452 | 				a ??= await readRuntime(join(dir, "first.json"));
+453 | 				b ??= await readRuntime(join(dir, "second.json"));
+454 | 			}
+455 | 			expect(a).not.toBeNull();
+                       ^
+error: expect(received).not.toBeNull()
+
+Received: null
+
+      at <anonymous> (/Users/hmziq/fo/nsh-http/tools/echo-server/tests/server.test.ts:455:18)
+(fail) start-up contract > a pinned port already in use falls through the 8123..8132 window, and each server records its ACTUAL port [10303.71ms]
+(pass) start-up contract > a real start writes the runtime file only after /health answers, and honors ECHO_LOG_PATH [205.72ms]
+
+ 1 pass
+ 38 filtered out
+ 1 fail
+ 7 expect() calls
+Ran 2 tests across 1 file. [10.52s]
+error: script "test" exited with code 1

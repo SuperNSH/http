@@ -1,0 +1,113 @@
+$ bun test -t CORS
+bun test v1.4.4 (38afee6c8)
+
+tests/server.test.ts:
+echo-server listening on 127.0.0.1:63479 (pid 33422), runtime file disabled
+312 |       ["GET", "/fast"],
+313 |       ["POST", "/echo"],
+314 |       ["GET", "/definitely/not/here"],
+315 |     ] as const) {
+316 |       const res = await fetch(`${base}${path}`, { method, headers: { origin: "http://127.0.0.1:8799" } });
+317 |       expect(res.headers.get("access-control-allow-origin")).toBe("*");
+                                                                   ^
+error: expect(received).toBe(expected)
+
+Expected: "*"
+Received: null
+
+      at <anonymous> (/Users/hmziq/fo/nsh-http/tools/echo-server/tests/server.test.ts:317:62)
+(fail) CORS > every answer carries the permissive CORS headers [0.43ms]
+328 |         origin: "http://127.0.0.1:8799",
+329 |         "access-control-request-method": "GET",
+330 |         "access-control-request-headers": "content-type",
+331 |       },
+332 |     });
+333 |     expect(res.status).toBe(204);
+                             ^
+error: expect(received).toBe(expected)
+
+Expected: 204
+Received: 405
+
+      at <anonymous> (/Users/hmziq/fo/nsh-http/tools/echo-server/tests/server.test.ts:333:24)
+(fail) CORS > an OPTIONS preflight answers 204 with the CORS headers and no body [0.23ms]
+341 |   test("a preflight writes nothing to the log", async () => {
+342 |     await srv.flushLog();
+343 |     const before = readLog();
+344 |     await fetch(`${base}/slow`, { method: "OPTIONS", headers: { origin: "http://127.0.0.1:8799" } });
+345 |     await srv.flushLog();
+346 |     expect(readLog()).toEqual(before);
+                            ^
+error: expect(received).toEqual(expected)
+
+  [
+    {
+      "event": "start",
+      "id": "881fd401-1723-4b8e-8f47-a0700ac216a5",
+      "method": "GET",
+      "path": "/health",
+      "ts": 1794033357661,
+    },
+    {
+      "event": "end",
+      "id": "881fd401-1723-4b8e-8f47-a0700ac216a5",
+      "ms": 0,
+      "status": 200,
+      "ts": 1794033357661,
+    },
+    {
+      "event": "start",
+      "id": "d2a89d55-f55b-4374-9fa2-6fc19ef15fc7",
+      "method": "GET",
+      "path": "/fast",
+      "ts": 1794033357662,
+    },
+    {
+      "event": "end",
+      "id": "d2a89d55-f55b-4374-9fa2-6fc19ef15fc7",
+      "ms": 0,
+      "status": 200,
+      "ts": 1794033357662,
+    },
+    {
+      "event": "start",
+      "id": "dc4f950d-785b-4f88-957e-c760bf052967",
+      "method": "OPTIONS",
+      "path": "/slow",
+      "ts": 1794033357662,
+    },
+    {
+      "event": "end",
+      "id": "dc4f950d-785b-4f88-957e-c760bf052967",
+      "ms": 0,
+      "status": 405,
+      "ts": 1794033357662,
+    },
++   {
++     "event": "start",
++     "id": "987cf50d-28d1-4234-ad94-57f6f8d65642",
++     "method": "OPTIONS",
++     "path": "/slow",
++     "ts": 1794033357663,
++   },
++   {
++     "event": "end",
++     "id": "987cf50d-28d1-4234-ad94-57f6f8d65642",
++     "ms": 0,
++     "status": 405,
++     "ts": 1794033357663,
++   },
+  ]
+
+- Expected  - 0
++ Received  + 14
+
+      at <anonymous> (/Users/hmziq/fo/nsh-http/tools/echo-server/tests/server.test.ts:346:23)
+(fail) CORS > a preflight writes nothing to the log [0.68ms]
+
+ 0 pass
+ 40 filtered out
+ 3 fail
+ 3 expect() calls
+Ran 3 tests across 1 file. [14.00ms]
+error: script "test" exited with code 1

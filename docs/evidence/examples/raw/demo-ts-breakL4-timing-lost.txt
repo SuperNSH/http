@@ -1,0 +1,7 @@
+✓ bundled App.tsx (36691 B in 8.0 ms)
+✗ tests/live/demo.test.ts › the demo's fast and slow calls land with real timings (1.5s)
+    expected 0 to be greater than or equal to 1100
+    at <anonymous> (tests/live/demo.test.ts:46:14)
+    on screen: "nsh-http demo", "base http://127.0.0.1:8123", "Back", "Echo", "Two routes through the client; the observer stamps every attempt.", "Load /fast", "Load /slow", "Fast route", "fast", "Fast call, observed", "fast · status 200 · 0 ms · ttfb 0 ms", "Slow route (1200 ms)", "slow 1200", "Slow call, observed", "slow · status 200 · 0 ms · ttfb 1202 ms"
+✓ tests/live/demo.test.ts › three parallel 401s share one refresh and all three succeed (311ms)
+error 2 tests: 1 passed, 1 failed (1.8s)
