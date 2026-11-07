@@ -33,3 +33,10 @@ right thing, and the code was restored. The full suite is green after restore.
 | # | Mutation (file: break) | Test that caught it | Failure observed |
 |---|---|---|---|
 | 17 | client.rs: the Stream guard moved back to per-attempt `send()` (inside run_url's retry loop) instead of the pre-loop hoist | errors.rs `a_streamed_request_body_fails_loudly_instead_of_sending_empty` | FAILED: with the default retry policy the refusal burned attempts (mock called, events recorded) instead of surfacing in one attempt with zero events. (A first mutation attempt was a behavioral no-op — a stale-string bug wrote back the hoisted guard alongside the per-attempt one — and passed; redone consistently.) |
+
+## Post-completion seam round (2026-11-07): send_request headers + content-type stamp
+
+| # | Mutation (file: break) | Test that caught it | Failure observed |
+|---|---|---|---|
+| 18 | client.rs: `send_request` drops `request.headers` again (the pre-fix behavior) | core.rs `send_request_carries_caller_headers_and_preserves_a_content_type` | FAILED: `the caller's content-type was clobbered: [("content-type", "application/json")]` — both caller headers gone |
+| 19 | client.rs: the application/json stamp unconditional again (clobbers a caller content-type) | core.rs `send_request_carries_caller_headers_and_preserves_a_content_type` | FAILED: `the caller's content-type was clobbered: [("content-type", "application/json"), ("x-seam", "from-caller")]` — headers carried but the multipart type overwritten |

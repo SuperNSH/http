@@ -12,6 +12,7 @@ use nsh_http::{CallOptions, HttpClient};
 use serde::{Deserialize, Serialize};
 
 use common::{Fixture, TEST_BASE, json, route};
+use nsh_testing::StubRoute;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 struct User {
@@ -196,4 +197,109 @@ fn NoBaseApp() -> impl IntoElement {
         done.set(true);
     });
     scenario.view()
+}
+
+// --- send_request: caller headers reach the wire, content-type survives -------
+
+struct SeamFixture;
+
+static SEAM: OnceLock<Fixture<SeamFixture>> = OnceLock::new();
+
+fn seam_rig() -> common::Rig {
+    Fixture::start(
+        &SEAM,
+        vec![(
+            format!("POST {TEST_BASE}/seam*"),
+            StubRoute::Response(json(200, r#"{"method":"POST","body":null}"#)),
+        )],
+        |builder| builder.retry(nsh_http::RetryPolicy::off()).build(),
+        SeamFixture,
+        |_| Root::of::<SeamApp>(),
+    )
+}
+
+#[component]
+fn SeamApp() -> impl IntoElement {
+    let scenario = common::scenario();
+    let done = scenario.done;
+    let client = SEAM
+        .get()
+        .expect("seam_rig() builds the fixture before the app mounts")
+        .client
+        .clone();
+    spawn(async move {
+        // A caller-set content-type (multipart) and an extra header travel
+        // with an exact request.
+        let multipart = HttpRequest {
+            method: "POST".to_owned(),
+            url: format!("{TEST_BASE}/seam/multipart"),
+            headers: vec![
+                (
+                    "content-type".to_owned(),
+                    "multipart/form-data; boundary=xyz".to_owned(),
+                ),
+                ("x-seam".to_owned(), "from-caller".to_owned()),
+            ],
+            body: HttpBody::Bytes(b"--xyz".to_vec()),
+            follow_redirects: true,
+        };
+        let sent = client.send_request(multipart).await.is_ok();
+        scenario
+            .lines
+            .update(|all| all.push(format!("multipart {sent}")));
+
+        // A JSON body without a content-type still gets the stamp.
+        let json = HttpRequest {
+            method: "POST".to_owned(),
+            url: format!("{TEST_BASE}/seam/json"),
+            headers: Vec::new(),
+            body: HttpBody::Bytes(br#"{"k":1}"#.to_vec()),
+            follow_redirects: true,
+        };
+        let stamped = client.send_request(json).await.is_ok();
+        scenario
+            .lines
+            .update(|all| all.push(format!("json {stamped}")));
+        done.set(true);
+    });
+    scenario.view()
+}
+
+#[test]
+fn send_request_carries_caller_headers_and_preserves_a_content_type() {
+    let mut rig = seam_rig();
+    rig.app.wait_for("text:done").unwrap();
+    assert!(common::shows_containing(&rig.app, "multipart true"));
+    assert!(common::shows_containing(&rig.app, "json true"));
+
+    let sent = rig.network.requests();
+    assert_eq!(sent.len(), 2);
+    let (multipart, json) = (&sent[0], &sent[1]);
+
+    // The caller's headers reached the wire verbatim, content-type included.
+    assert!(
+        multipart
+            .headers
+            .iter()
+            .any(|(n, v)| n == "content-type" && v == "multipart/form-data; boundary=xyz"),
+        "the caller's content-type was clobbered: {:?}",
+        multipart.headers
+    );
+    assert!(
+        multipart
+            .headers
+            .iter()
+            .any(|(n, v)| n == "x-seam" && v == "from-caller"),
+        "the caller's extra header was dropped: {:?}",
+        multipart.headers
+    );
+
+    // A JSON body with no content-type still gets the stamp.
+    assert!(
+        json.headers
+            .iter()
+            .any(|(n, v)| n.eq_ignore_ascii_case("content-type") && v == "application/json"),
+        "the JSON stamp went missing: {:?}",
+        json.headers
+    );
 }

@@ -295,16 +295,19 @@ impl HttpClient {
     /// must be absolute. A streamed body is refused loudly, never silently
     /// downgraded to an empty send (docs/decision.md, experiment 2).
     pub async fn send_request(&self, request: HttpRequest) -> Result<HttpResponse, Error> {
-        let options = CallOptions::default();
-        self.run_url(
-            &request.method,
-            &request.url,
-            request.body,
-            &options,
-            false,
-            None,
-        )
-        .await
+        let HttpRequest {
+            method,
+            url,
+            headers,
+            body,
+            follow_redirects: _,
+        } = request;
+        let options = CallOptions {
+            headers,
+            ..CallOptions::default()
+        };
+        self.run_url(&method, &url, body, &options, false, None)
+            .await
     }
 
     /// The pipeline's driver over an absolute URL: an inner retry loop over
@@ -468,7 +471,13 @@ impl HttpClient {
         for (name, value) in &options.headers {
             set_header(&mut headers, name, value);
         }
-        if body.as_ref().is_some_and(|b| !b.is_empty()) {
+        // The JSON stamp yields to a caller-set content-type (a multipart
+        // body must reach the wire as multipart).
+        if body.as_ref().is_some_and(|b| !b.is_empty())
+            && !headers
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case("content-type"))
+        {
             set_header(&mut headers, "content-type", "application/json");
         }
         if let Some(token) = &token {
