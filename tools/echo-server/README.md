@@ -54,6 +54,7 @@ runtime file is not written at all unless `ECHO_RUNTIME_PATH` is set).
 | GET /redirect/refused | 302 to `http://refused.invalid/next` — a host no test app declares, so capability refusal on a redirect hop is provable |
 | GET /redirect/local | 302 to `/fast` |
 | GET /bytes/:n | `n` bytes with `Content-Length` (max 100000000) |
+| GET /log?tail=n | the last `n` lines of `.runtime.log` as `{"lines":[...]}`, parsed, oldest first (`tail` clamped 1–1000, default 20; `[]` on an empty log). Reading it appends nothing to the log. Test VMs on 0.4.0 cannot read files, so the nsh-query cancellation proof in `examples/demo-ts` goes through this route |
 
 `/slow`, `/stream` and `/sse` watch the request's abort signal; a client that
 disconnects early makes the server log an `aborted` line for that request.

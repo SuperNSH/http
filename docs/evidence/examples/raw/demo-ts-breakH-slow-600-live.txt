@@ -1,0 +1,5 @@
+✓ bundled examples/demo-ts/App.tsx (28353 B in 7.2 ms)
+✗ examples/demo-ts/tests/live/demo.test.ts › the demo's fast and slow calls land with real timings (5.4s)
+    the condition never held in 5000 ms; on screen: ["base http://127.0.0.1:8123", "back", "load fast", "fast fast", "fast-info status 200 0ms ttfb 0ms", "load slow", "slow slow 600", "slow-info status 200 602ms ttfb 602ms"]
+✓ examples/demo-ts/tests/live/demo.test.ts › three parallel 401s share one refresh and all three succeed (422ms)
+error 2 tests: 1 passed, 1 failed (5.9s)

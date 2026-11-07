@@ -1,0 +1,8 @@
+(fail) /log > returns the last tail lines as parsed JSON, oldest first [3.85ms]
+(fail) /log > tail beyond the log's length returns every line there is [0.95ms]
+(fail) /log > reading /log appends nothing to the log, so the next tail is stable [1.02ms]
+(fail) /log > returns the last tail lines as parsed JSON, oldest first [3.85ms]
+(fail) /log > tail beyond the log's length returns every line there is [0.95ms]
+(fail) /log > reading /log appends nothing to the log, so the next tail is stable [1.02ms]
+ 36 pass
+ 3 fail

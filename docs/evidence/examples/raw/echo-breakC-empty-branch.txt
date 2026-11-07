@@ -1,0 +1,17 @@
+Break C, first attempt (catch path: a MISSING log file returned a placeholder
+line) — did not fail: the test truncates the log, it never deletes it, so the
+catch is not the path under test. 39 pass, 0 fail (recorded live, then the
+break was rewritten to bind the real path):
+
+  39 pass
+  0 fail
+Ran 39 tests across 1 file.
+
+Break C-prime, second attempt (an empty parse result gets a placeholder line
+appended) — failed the bound test:
+
+(fail) /log > default tail is 20; an empty log answers {lines: []} [2.27ms]
+(fail) /log > default tail is 20; an empty log answers {lines: []} [2.27ms]
+ 38 pass
+ 1 fail
+Ran 39 tests across 1 file.

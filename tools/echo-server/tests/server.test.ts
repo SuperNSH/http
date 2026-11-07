@@ -5,6 +5,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
 import { readFileSync } from "node:fs";
 import { start, type EchoServerHandle } from "../src/server";
 
@@ -302,6 +303,62 @@ describe("/bytes/:n", () => {
   test("bad or oversized n -> 400", async () => {
     expect((await fetch(`${base}/bytes/nope`)).status).toBe(400);
     expect((await fetch(`${base}/bytes/99999999999`)).status).toBe(400);
+  });
+});
+
+describe("/log", () => {
+  test("returns the last tail lines as parsed JSON, oldest first", async () => {
+    await srv.flushLog();
+    const res = await fetch(`${base}/log?tail=3`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { lines: unknown[] };
+    expect(body.lines).toEqual(readLog().slice(-3));
+    expect(body.lines).toHaveLength(3);
+  });
+
+  test("tail beyond the log's length returns every line there is", async () => {
+    await srv.flushLog();
+    const res = await fetch(`${base}/log?tail=10000`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { lines: unknown[] };
+    expect(body.lines).toEqual(readLog());
+  });
+
+  test("default tail is 20; an empty log answers {lines: []}", async () => {
+    await srv.flushLog();
+    const res = await fetch(`${base}/log`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { lines: unknown[] };
+    expect(body.lines.length).toBeLessThanOrEqual(20);
+
+    // A fresh server has already logged its own /health check, so the
+    // empty-file branch needs the log truncated under it.
+    const dir = await mkdtemp(join(tmpdir(), "nsh-http-echo-log-"));
+    const empty = await start({ runtimePath: null, logPath: join(dir, "empty.log") });
+    try {
+      await empty.flushLog();
+      writeFileSync(empty.logPath, "");
+      const res = await fetch(`http://127.0.0.1:${empty.port}/log`);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ lines: [] });
+    } finally {
+      await empty.stop();
+    }
+  });
+
+  test("reading /log appends nothing to the log, so the next tail is stable", async () => {
+    await srv.flushLog();
+    const before = readLog();
+    await fetch(`${base}/log?tail=1`);
+    await fetch(`${base}/log?tail=2`);
+    await srv.flushLog();
+    expect(readLog()).toEqual(before);
+  });
+
+  test("wrong method -> 405", async () => {
+    const res = await fetch(`${base}/log`, { method: "POST" });
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("GET");
   });
 });
 

@@ -1,0 +1,3 @@
+✗ examples/demo-ts/tests/live/abort.test.ts › replacing the query aborts the in-flight /slow request, and the server's log proves it (6.3s)
+    `text:log-abort yes` showing never happened in 5000 ms; on screen: ["base http://127.0.0.1:8123", "back", "query-topic 2", "query-status success", "query-data slow", "replace query", "check log", "log-abort no"]
+error 1 test: 0 passed, 1 failed (6.3s)

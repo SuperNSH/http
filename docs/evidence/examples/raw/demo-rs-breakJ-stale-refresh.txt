@@ -1,0 +1,13 @@
+test the_demo_runs_fast_slow_and_one_shared_refresh_on_stubs ... FAILED
+thread 'the_demo_runs_fast_slow_and_one_shared_refresh_on_stubs' (10770571) panicked at tests/demo.rs:100:5:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+error: test failed, to rerun pass `--test demo`
+thread 'the_demo_runs_fast_slow_and_one_shared_refresh_on_stubs' (10771515) panicked at tests/demo.rs:100:5:
+all three posts succeeded
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    the_demo_runs_fast_slow_and_one_shared_refresh_on_stubs
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s

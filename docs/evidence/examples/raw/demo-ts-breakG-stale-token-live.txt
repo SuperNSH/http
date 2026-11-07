@@ -1,0 +1,5 @@
+✓ bundled examples/demo-ts/App.tsx (28356 B in 7.2 ms)
+✓ examples/demo-ts/tests/live/demo.test.ts › the demo's fast and slow calls land with real timings (1.5s)
+✗ examples/demo-ts/tests/live/demo.test.ts › three parallel 401s share one refresh and all three succeed (5.4s)
+    `text:done 3` showing never happened in 5000 ms; on screen: ["base http://127.0.0.1:8123", "back", "run refresh demo", "refreshes 1", "done 0", "failed 3"]
+error 2 tests: 1 passed, 1 failed (7.0s)

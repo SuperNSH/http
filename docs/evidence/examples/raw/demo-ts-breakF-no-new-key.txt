@@ -1,0 +1,6 @@
+✓ bundled examples/demo-ts/App.tsx (28324 B in 7.5 ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (224ms)
+✗ examples/demo-ts/tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (5.1s)
+    `text:query-topic 2` showing never happened in 5000 ms; on screen: ["base http://127.0.0.1:8123", "back", "query-topic 1", "query-status idle", "query-data none", "replace query", "check log", "log-abort not checked"]
+✓ examples/demo-ts/tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (113ms)
+error 3 tests: 2 passed, 1 failed (5.5s)

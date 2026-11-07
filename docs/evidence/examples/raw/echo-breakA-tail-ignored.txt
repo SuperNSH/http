@@ -1,0 +1,6 @@
+(fail) /log > returns the last tail lines as parsed JSON, oldest first [1.21ms]
+(fail) /log > default tail is 20; an empty log answers {lines: []} [0.45ms]
+(fail) /log > returns the last tail lines as parsed JSON, oldest first [1.21ms]
+(fail) /log > default tail is 20; an empty log answers {lines: []} [0.45ms]
+ 37 pass
+ 2 fail

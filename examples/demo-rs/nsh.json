@@ -1,0 +1,13 @@
+{
+  "name": "nsh-http demo (rust)",
+  "id": "dev.nshhttp.demo-rs",
+  "version": "0.1.0",
+  "build": 1,
+  "rust": ".",
+  "root": "App",
+  "capabilities": {
+    "network": {
+      "hosts": ["127.0.0.1"]
+    }
+  }
+}

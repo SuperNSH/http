@@ -43,6 +43,31 @@ interface Ctx {
 interface AppState {
   // One hit counter per `fail` value, so concurrent flaky tests stay independent.
   flakyHits: Map<number, number>;
+  log: JsonLog;
+}
+
+/** The last `tail` log lines, parsed, oldest first. Test VMs on 0.4.0 cannot
+ * read files, so the nsh-query cancellation proof goes through this route. */
+async function handleLog(ctx: Ctx, state: AppState): Promise<Response> {
+  const tail = clampInt(ctx.url.searchParams.get("tail"), 20, 1, 1000);
+  let raw: string;
+  try {
+    raw = await Bun.file(state.log.path).text();
+  } catch {
+    // No log yet (fresh server, nothing answered): an empty tail is the truth.
+    return json({ lines: [] });
+  }
+  const lines = raw.split("\n").filter((line) => line.trim() !== "");
+  const sliced = lines.slice(-tail);
+  const parsed: unknown[] = [];
+  for (const line of sliced) {
+    try {
+      parsed.push(JSON.parse(line));
+    } catch {
+      parsed.push({ event: "unparsable", raw: line });
+    }
+  }
+  return json({ lines: parsed });
 }
 
 function clampInt(raw: string | null, fallback: number, min: number, max: number): number {
@@ -281,6 +306,10 @@ async function routeRequest(ctx: Ctx, state: AppState): Promise<Response> {
     if (method !== "GET") return methodNotAllowed("GET");
     return handleBytes(ctx);
   }
+  if (path === "/log") {
+    if (method !== "GET") return methodNotAllowed("GET");
+    return handleLog(ctx, state);
+  }
   return json({ error: "not_found", path }, { status: 404 });
 }
 
@@ -289,7 +318,13 @@ function createFetchHandler(state: AppState, log: JsonLog) {
     const url = new URL(request.url);
     const id = crypto.randomUUID();
     const startedAt = performance.now();
-    log.write({ event: "start", id, ts: Date.now(), method: request.method, path: url.pathname });
+    // /log reads the log; logging it would append to the very tail the next
+    // reader is about to fetch, so it stays out of its own answer.
+    const quiet = url.pathname === "/log";
+    const write = (record: Record<string, unknown>) => {
+      if (!quiet) log.write(record);
+    };
+    write({ event: "start", id, ts: Date.now(), method: request.method, path: url.pathname });
 
     let ended = false;
     let aborted = false;
@@ -303,12 +338,12 @@ function createFetchHandler(state: AppState, log: JsonLog) {
       if (ended || aborted) return;
       aborted = true;
       resolveDisconnect();
-      log.write({ event: "aborted", id, ts: Date.now(), path: url.pathname });
+      write({ event: "aborted", id, ts: Date.now(), path: url.pathname });
     };
     const complete = (status: number) => {
       if (ended || aborted) return;
       ended = true;
-      log.write({
+      write({
         event: "end",
         id,
         ts: Date.now(),
@@ -376,7 +411,7 @@ async function verifyHealth(port: number): Promise<boolean> {
 export async function start(opts: ServerOpts = {}): Promise<EchoServerHandle> {
   const { logPath, runtimePath } = resolvePaths(opts);
   const log = createJsonLog(logPath);
-  const state: AppState = { flakyHits: new Map() };
+  const state: AppState = { flakyHits: new Map(), log };
   // ECHO_PORT pins the port because nsh test VMs on 0.4.0 cannot read .runtime.json —
   // live suites and apps can only find the server on a port known in advance.
   const requested = process.env.ECHO_PORT ? Number(process.env.ECHO_PORT) : 0;

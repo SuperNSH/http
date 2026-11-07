@@ -1,0 +1,4 @@
+(fail) /log > wrong method -> 405 [0.80ms]
+(fail) /log > wrong method -> 405 [0.80ms]
+ 38 pass
+ 1 fail

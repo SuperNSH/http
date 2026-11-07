@@ -1,0 +1,6 @@
+✓ bundled examples/demo-ts/App.tsx (28356 B in 7.4 ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (240ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (485ms)
+✗ examples/demo-ts/tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (5.1s)
+    `text:done 3` showing never happened in 5000 ms; on screen: ["base http://127.0.0.1:8123", "back", "run refresh demo", "refreshes 1", "done 0", "failed 3"]
+error 3 tests: 2 passed, 1 failed (5.9s)

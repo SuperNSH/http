@@ -1,0 +1,5 @@
+✓ bundled examples/demo-ts/App.tsx (28288 B in 20.0 ms)
+✗ examples/demo-ts/tests/unit/demo.test.ts › echo screen › fast and slow calls show their status and timings (30ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › query screen › replacing the query drops the in-flight load and starts the new key (788ms)
+✓ examples/demo-ts/tests/unit/demo.test.ts › auth screen › three parallel 401s share one refresh and all three succeed (134ms)
+error 3 tests: 2 passed, 1 failed (966ms)
