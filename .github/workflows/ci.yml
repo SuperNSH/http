@@ -1,0 +1,370 @@
+name: CI
+
+# Every compile and test runs here, on GitHub's runners, never on a developer's machine.
+# kache caches compiler outputs in GitHub's Actions cache; only main saves to it.
+# The echo server (tools/echo-server) is started inside each job that has live tests.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  LINUX_PACKAGES: dbus dbus-user-session gnome-keyring libgtk-4-dev libwebkitgtk-6.0-dev clang llvm
+  ECHO_PORT: "8123"
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Check the library and both demo crates
+        run: |
+          cargo fmt --all -- --check
+          cargo fmt --manifest-path examples/demo-rs/Cargo.toml -- --check
+
+  rust:
+    name: rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: rust-${{ matrix.os }}
+          cache-key-prefix: kache-rust-${{ matrix.os }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          pr-comment: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Start the echo server
+        shell: bash
+        run: |
+          (cd tools/echo-server && nohup bun run src/server.ts > "$RUNNER_TEMP/echo.log" 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -sf "http://127.0.0.1:$ECHO_PORT/health" > /dev/null; then
+              cat tools/echo-server/.runtime.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/echo.log"
+          exit 1
+      - run: cargo clippy -p nsh-http --all-targets --all-features -- -D warnings
+      # --include-ignored runs the LIVE tests (tests/live_*.rs) against the echo server started above.
+      - run: cargo test -p nsh-http --all-features --no-fail-fast -- --include-ignored
+
+  demo-rs:
+    name: demo-rs tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: demo-rs-tests-${{ matrix.os }}
+          cache-key-prefix: kache-demo-rs-tests-${{ matrix.os }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          pr-comment: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Start the echo server
+        shell: bash
+        run: |
+          (cd tools/echo-server && nohup bun run src/server.ts > "$RUNNER_TEMP/echo.log" 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -sf "http://127.0.0.1:$ECHO_PORT/health" > /dev/null; then
+              cat tools/echo-server/.runtime.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/echo.log"
+          exit 1
+      - run: cargo clippy --manifest-path examples/demo-rs/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path examples/demo-rs/Cargo.toml --no-fail-fast -- --include-ignored
+
+  cross-check:
+    name: check (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, target: aarch64-apple-ios }
+          - { os: macos-latest, target: aarch64-apple-ios-sim }
+          - { os: ubuntu-latest, target: aarch64-linux-android }
+          - { os: ubuntu-latest, target: wasm32-unknown-unknown }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: stable
+          components: clippy
+          targets: ${{ matrix.target }}
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: check-${{ matrix.target }}
+          cache-key-prefix: kache-check-${{ matrix.target }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          pr-comment: false
+      - name: Point cc at the NDK
+        if: matrix.target == 'aarch64-linux-android'
+        run: |
+          bin="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "CC_aarch64_linux_android=$bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$bin/llvm-ar" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+      - run: cargo clippy -p nsh-http --target ${{ matrix.target }} --all-features -- -D warnings
+
+  typescript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # demo-ts imports nsh-query from a sibling checkout; this is the pinned revision the README names.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SuperNSH/query
+          ref: 470e10a49f0e4e44148a6a08e229a55867eb9688
+          path: deps/nsh-query
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Install NSH
+        env:
+          NSH_VERSION: v0.4.0
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Echo server unit tests
+        run: bun --cwd tools/echo-server test
+      - name: Start the echo server
+        shell: bash
+        run: |
+          (cd tools/echo-server && nohup bun run src/server.ts > "$RUNNER_TEMP/echo.log" 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -sf "http://127.0.0.1:$ECHO_PORT/health" > /dev/null; then
+              cat tools/echo-server/.runtime.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/echo.log"
+          exit 1
+      - name: Link the packages into the examples
+        run: |
+          mkdir -p examples/demo-ts/node_modules examples/monitor-app/node_modules
+          ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/demo-ts/node_modules/nsh-http
+          ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/monitor-app/node_modules/nsh-http
+          ln -s "$GITHUB_WORKSPACE/deps/nsh-query/packages/nsh-query" examples/demo-ts/node_modules/nsh-query
+      - name: packages/nsh-http check, build and test
+        working-directory: packages/nsh-http
+        run: |
+          nsh check
+          nsh build 2>&1 | tee build.log
+          ! grep -i warn build.log
+          nsh test
+      - name: examples/monitor-app check, build and test
+        run: |
+          nsh check examples/monitor-app
+          nsh build examples/monitor-app 2>&1 | tee monitor-build.log
+          ! grep -i warn monitor-build.log
+          nsh test examples/monitor-app
+      - name: examples/demo-ts check, build and test
+        run: |
+          nsh check examples/demo-ts
+          nsh build examples/demo-ts 2>&1 | tee demo-ts-build.log
+          ! grep -i warn demo-ts-build.log
+          nsh test examples/demo-ts
+
+  demo:
+    name: demo ${{ matrix.demo }} (${{ matrix.target }})
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [format, rust, demo-rs, cross-check, typescript]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [demo-rs, demo-ts]
+        target: [macos, ios-simulator, linux, android, web, windows]
+        include:
+          - { target: macos, os: macos-latest }
+          - { target: ios-simulator, os: macos-latest }
+          - { target: linux, os: ubuntu-latest }
+          - { target: android, os: ubuntu-latest }
+          - { target: web, os: ubuntu-latest }
+          - { target: windows, os: windows-latest }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        if: matrix.demo == 'demo-rs'
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target == 'android' && 'aarch64-linux-android' || matrix.target == 'web' && 'wasm32-unknown-unknown' || matrix.target == 'ios-simulator' && 'aarch64-apple-ios-sim' || '' }}
+      - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        if: matrix.demo == 'demo-rs'
+        with:
+          version: v2.0.0
+          cache-dir: ${{ runner.temp }}/kache
+          manifest-key: demo-rs-${{ matrix.target }}
+          cache-key-prefix: kache-demo-rs-${{ matrix.target }}
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          pr-comment: false
+      - name: Install the wasm-bindgen CLI that NSH's web runtime needs
+        if: matrix.target == 'web'
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: Install Linux packages
+        if: runner.os == 'Linux' && matrix.demo == 'demo-rs'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_PACKAGES
+      - name: Install NSH
+        if: runner.os != 'Windows'
+        env:
+          NSH_VERSION: v0.4.0
+        run: |
+          curl -fsSL https://nsh.dev/install.sh | sh
+          echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install NSH
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          NSH_VERSION: v0.4.0
+        run: |
+          irm https://nsh.dev/install.ps1 | iex
+          "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Work around NSH 0.4.0's crates.io packaging of nsh-platform-ios
+        if: matrix.demo == 'demo-rs' && matrix.target == 'ios-simulator'
+        # The published crate includes a file it does not ship, so build NSH's crates from its v0.4.0 source.
+        run: |
+          git clone --quiet --depth 1 --branch v0.4.0 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
+          mkdir -p examples/demo-rs/.cargo
+          {
+            echo "[patch.crates-io]"
+            for crate in "$RUNNER_TEMP"/nsh-src/crates/nsh-*; do
+              echo "$(basename "$crate") = { path = \"$crate\" }"
+            done
+          } > examples/demo-rs/.cargo/config.toml
+      - name: Check out nsh-query for demo-ts
+        if: matrix.demo == 'demo-ts'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SuperNSH/query
+          ref: 470e10a49f0e4e44148a6a08e229a55867eb9688
+          path: deps/nsh-query
+          persist-credentials: false
+      - name: Link the packages into demo-ts
+        if: matrix.demo == 'demo-ts'
+        run: |
+          mkdir -p examples/demo-ts/node_modules
+          ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/demo-ts/node_modules/nsh-http
+          ln -s "$GITHUB_WORKSPACE/deps/nsh-query/packages/nsh-query" examples/demo-ts/node_modules/nsh-query
+      - name: Package
+        shell: bash
+        working-directory: examples/${{ matrix.demo }}
+        run: |
+          abi=""
+          id=""
+          entry="."
+          [ "${{ matrix.target }}" = android ] && abi="--abi arm64-v8a"
+          # Android application ids cannot contain hyphens; the nsh.json ids do, so override them for this build only.
+          if [ "${{ matrix.target }}" = android ]; then
+            case "${{ matrix.demo }}" in
+              demo-rs) id="--id dev.nshhttp.demors" ;;
+              demo-ts) id="--id dev.nshhttp.demots" ;;
+            esac
+          fi
+          [ "${{ matrix.demo }}" = demo-ts ] && entry="App.tsx"
+          nsh package "$entry" --target ${{ matrix.target }} $abi $id --app-version 0.1.0 --build ${{ github.run_number }} --out "$RUNNER_TEMP/out"
+      - name: Name the build
+        shell: bash
+        run: |
+          mkdir -p dist
+          cd "$RUNNER_TEMP/out"
+          name="nsh-http-${{ matrix.demo }}-${{ matrix.target }}"
+          case "${{ matrix.target }}" in
+            android) cp ./*.apk "$GITHUB_WORKSPACE/dist/$name.apk" ;;
+            linux) cp ./*.tar.gz "$GITHUB_WORKSPACE/dist/$name.tar.gz" ;;
+            macos|ios-simulator) ditto -c -k --keepParent ./*.app "$GITHUB_WORKSPACE/dist/$name.zip" ;;
+            windows) 7z a "$GITHUB_WORKSPACE/dist/$name.zip" ./* > /dev/null ;;
+            web) tar -czf "$GITHUB_WORKSPACE/dist/$name.tar.gz" * ;;
+          esac
+          ls -la "$GITHUB_WORKSPACE/dist"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nsh-http-${{ matrix.demo }}-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: publish the latest build
+    needs: [format, rust, demo-rs, cross-check, typescript, demo]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-latest
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Replace the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
+          gh release create latest dist/* --repo "$REPO" --target "$GITHUB_SHA" --latest \
+            --title "Latest build" \
+            --notes "Demo builds from main at $GITHUB_SHA, replaced on every push to main. Unsigned: macOS and Windows will warn before opening them, and the iOS build runs only in the simulator."
