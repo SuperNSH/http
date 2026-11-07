@@ -96,11 +96,11 @@ describe("query screen", () => {
       }),
     );
     await app.press("id:open-Query");
-    await app.waitFor("text:loading-empty");
+    await app.waitFor("text:pending · fetching");
     await app.press("id:replace-query");
     await app.waitFor("text:/^2$/");
-    await app.waitFor("text:loading-empty");
-    await app.waitUntil(() => app.shows("text:success"));
+    await app.waitFor("text:pending · fetching");
+    await app.waitUntil(() => app.shows("text:/^success/"));
     await app.waitFor("text:/^slow$/");
     await app.press("id:check-log");
     await app.waitFor("text:/^yes/");

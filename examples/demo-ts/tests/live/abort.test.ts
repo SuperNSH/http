@@ -52,10 +52,10 @@ test("replacing the query aborts the in-flight /slow request, and the server's l
     return;
   }
   await app!.press("id:open-Query");
-  await app!.waitFor("text:query-status loading-empty");
+  await app!.waitFor("text:pending · fetching");
   await app!.press("id:replace-query");
-  await app!.waitFor("text:query-topic 2");
-  await app!.waitFor("text:query-status loading-empty");
+  await app!.waitFor("text:/^2$/");
+  await app!.waitFor("text:pending · fetching");
   // The proof rides the network too: the test VM cannot read the server's
   // log file, so the app reads it back through GET /log (tools/echo-server).
   await app!.press("id:check-log");

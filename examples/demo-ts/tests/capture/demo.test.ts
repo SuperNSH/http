@@ -82,10 +82,10 @@ test("captures the demo screens", async () => {
   // request to land in the server's log (read back over GET /log), and take
   // the picture of the checked state (behavior row 15).
   await app.press("id:open-Query");
-  await app.waitFor("text:loading-empty");
+  await app.waitFor("text:pending · fetching");
   await app.press("id:replace-query");
   await app.waitFor("text:/^2$/");
-  await app.waitFor("text:loading-empty");
+  await app.waitFor("text:pending · fetching");
   await app.press("id:check-log");
   await app.waitFor("text:/^yes/");
   await shot(app, "docs/evidence/examples/demo-ts-query.png");

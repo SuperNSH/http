@@ -1,6 +1,6 @@
 import { type JSX, mount, signal, Text, View } from "nsh";
 import { createClient, type HttpError, type NetworkEvent, type TokenProvider } from "nsh-http";
-import { createQuery, queryClient } from "nsh-query";
+import { createQuery, QueryClient } from "nsh-query";
 
 // The test VM on 0.4.0 cannot read files or inherit environment, so the echo
 // base URL is discovered by probing /health over the documented window — the
@@ -144,18 +144,23 @@ function EchoScreen(props: ScreenProps) {
 function QueryScreen(props: ScreenProps) {
   const client = createClient({ baseUrl: props.url() });
   const topic = signal(1);
-  // The fetcher hands the query's AbortSignal to the client, so cancelling the
-  // query kills the request on the wire. nsh-query keeps a released key's load
-  // running by design (moving back to a key serves its cache), so replacing
-  // the query cancels the old prefix on the way to the new key.
-  const post = createQuery<{ route: string; delay: number }>({
-    key: () => ["post", String(topic())],
-    fetch: ({ signal }) =>
-      client.get("/slow", { query: { delay: 3000, topic: topic() }, signal, timeoutMs: null }),
-  });
+  const queryClient = new QueryClient();
+  // TanStack's options accessor tracks the key, so bumping `topic` moves the
+  // query to a new key; a released key's load keeps running by design (its
+  // cache serves a move back), and `replace` cancels it explicitly. The
+  // fetcher hands TanStack's AbortSignal to the client, so the cancel kills
+  // the request on the wire and the server log proves it.
+  const post = createQuery<{ route: string; delay: number }>(
+    () => ({
+      queryKey: ["post", String(topic())],
+      queryFn: ({ signal }) =>
+        client.get("/slow", { query: { delay: 3000, topic: topic() }, signal, timeoutMs: null }),
+    }),
+    queryClient,
+  );
   const proof = signal("not checked");
   const replace = () => {
-    queryClient.cancel(["post"]);
+    queryClient.cancelQueries({ queryKey: ["post"] });
     topic.update((n) => n + 1);
   };
   const prove = (lines: { event: string; id?: string; path?: string }[]): boolean => {
@@ -194,8 +199,8 @@ function QueryScreen(props: ScreenProps) {
       </View>
       <View class="gap-2">
         <Card label="Topic (the query key)" value={String(topic())} />
-        <Card label="Load" value={post.status()} />
-        <Card label="Route" value={post.data()?.route ?? "none"} />
+        <Card label="Load" value={`${post.status} · ${post.fetchStatus}`} />
+        <Card label="Route" value={post.data?.route ?? "none"} />
         <Card label="Server log check" value={proof()} destructive={proof().startsWith("no")} />
       </View>
     </View>

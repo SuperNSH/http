@@ -154,8 +154,10 @@ The Rust live tests (`#[ignore]`, `-- --ignored`) read the echo server's port fr
 ## Demo
 
 From a clean clone to the demo running against the local echo server. Prerequisites: `nsh` 0.4.0, `bun`, Rust
-stable, and the `nsh-query` checkout cloned alongside this one (`~/fo/nsh-query` below; adjust the path to yours)
-— the demo's query screen consumes its package read-only by symlink.
+stable, and the `nsh-query` repository cloned alongside this one (`git clone --depth 1 https://github.com/SuperNSH/query ~/nsh-query`;
+`~/nsh-query` below; adjust the path to yours) — the demo's query screen consumes its package read-only by
+symlink. The package is TanStack Query v5 based; its dependencies install with
+`(cd ~/nsh-query/packages/nsh-query && bun install --ignore-scripts)`.
 
 **The port contract.** The echo server's pinned default is `127.0.0.1:8123`; test VMs on 0.4.0 cannot read files
 or inherit environment, so the port must be known before an app runs. When that port is taken (`EADDRINUSE` —
@@ -183,7 +185,7 @@ TypeScript demo — link the two packages, then run it:
 cd examples/demo-ts
 mkdir -p node_modules
 ln -s ../../../packages/nsh-http node_modules/nsh-http
-ln -s ~/fo/nsh-query/packages/nsh-query node_modules/nsh-query
+ln -s ~/nsh-query/packages/nsh-query node_modules/nsh-query
 cd ../..
 nsh run examples/demo-ts
 ```

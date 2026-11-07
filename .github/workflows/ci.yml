@@ -164,11 +164,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # demo-ts imports nsh-query from a sibling checkout; this is the pinned revision the README names.
+      # demo-ts imports nsh-query from a sibling checkout; master carries the TanStack-based API.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: SuperNSH/query
-          ref: 470e10a49f0e4e44148a6a08e229a55867eb9688
           path: deps/nsh-query
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -200,6 +199,8 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/demo-ts/node_modules/nsh-http
           ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/monitor-app/node_modules/nsh-http
           ln -s "$GITHUB_WORKSPACE/deps/nsh-query/packages/nsh-query" examples/demo-ts/node_modules/nsh-query
+          # The TanStack-based package depends on @tanstack/query-*; install them into the package's own node_modules.
+          bun --cwd deps/nsh-query/packages/nsh-query install --ignore-scripts
       - name: packages/nsh-http check, build and test
         working-directory: packages/nsh-http
         run: |
@@ -297,7 +298,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: SuperNSH/query
-          ref: 470e10a49f0e4e44148a6a08e229a55867eb9688
           path: deps/nsh-query
           persist-credentials: false
       - name: Link the packages into demo-ts
@@ -308,6 +308,8 @@ jobs:
           mkdir -p examples/demo-ts/node_modules
           cp -R packages/nsh-http examples/demo-ts/node_modules/nsh-http
           cp -R deps/nsh-query/packages/nsh-query examples/demo-ts/node_modules/nsh-query
+          # The TanStack-based package depends on @tanstack/query-*; install them into the package's own node_modules.
+          bun --cwd examples/demo-ts/node_modules/nsh-query install --ignore-scripts
       - name: Package
         shell: bash
         working-directory: examples/${{ matrix.demo }}
