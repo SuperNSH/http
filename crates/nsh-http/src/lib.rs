@@ -24,7 +24,7 @@ pub mod prelude {
     pub use crate::etag::{ConditionalGet, etag_of, max_age_ms};
     pub use crate::middleware::{Middleware, Next, Request, Response};
     pub use crate::mock::MockTransport;
-    pub use crate::monitor::{NetworkEvent, Observer};
+    pub use crate::monitor::{Monitor, MonitorBuilder, NetworkEvent, Observer, Sampling, Stats};
     pub use crate::retry::{RetryPolicy, parse_retry_after};
     pub use crate::{TokenProvider, Transport};
 }
@@ -35,7 +35,7 @@ pub use crate::error::Error;
 pub use crate::etag::{ConditionalGet, etag_of, max_age_ms};
 pub use crate::middleware::{BoxFuture, Middleware, Next, Request, Response};
 pub use crate::mock::MockTransport;
-pub use crate::monitor::{NetworkEvent, Observer};
+pub use crate::monitor::{Monitor, MonitorBuilder, NetworkEvent, Observer, Sampling, Stats};
 pub use crate::retry::{
     RetryPolicy, format_http_date, is_idempotent, parse_http_date, parse_retry_after,
 };
