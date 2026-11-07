@@ -230,7 +230,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        demo: [demo-rs, demo-ts, monitor-app]
+        demo: [demo-rs, demo-ts]
         target: [macos, ios-simulator, linux, android, web, windows]
         include:
           - { target: macos, os: macos-latest }
@@ -300,6 +300,8 @@ jobs:
           repository: SuperNSH/query
           path: deps/nsh-query
           persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: matrix.demo != 'demo-rs'
       - name: Link the packages into the app
         if: matrix.demo == 'demo-ts' || matrix.demo == 'monitor-app'
         shell: bash
