@@ -1,6 +1,6 @@
 {
   "name": "nsh-http demo",
-  "id": "dev.nshhttp.demo-ts",
+  "id": "dev.nshhttp.demots",
   "version": "0.1.0",
   "build": 1,
   "theme": "theme.json",

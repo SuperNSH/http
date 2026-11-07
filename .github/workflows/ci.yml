@@ -313,18 +313,10 @@ jobs:
         working-directory: examples/${{ matrix.demo }}
         run: |
           abi=""
-          id=""
           entry="."
           [ "${{ matrix.target }}" = android ] && abi="--abi arm64-v8a"
-          # Android application ids cannot contain hyphens; the nsh.json ids do, so override them for this build only.
-          if [ "${{ matrix.target }}" = android ]; then
-            case "${{ matrix.demo }}" in
-              demo-rs) id="--id dev.nshhttp.demors" ;;
-              demo-ts) id="--id dev.nshhttp.demots" ;;
-            esac
-          fi
           [ "${{ matrix.demo }}" = demo-ts ] && entry="App.tsx"
-          nsh package "$entry" --target ${{ matrix.target }} $abi $id --app-version 0.1.0 --build ${{ github.run_number }} --out "$RUNNER_TEMP/out"
+          nsh package "$entry" --target ${{ matrix.target }} $abi --app-version 0.1.0 --build ${{ github.run_number }} --out "$RUNNER_TEMP/out"
       - name: Name the build
         shell: bash
         run: |
