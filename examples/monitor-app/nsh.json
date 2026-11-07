@@ -1,0 +1,10 @@
+{
+  "name": "nsh-http monitor",
+  "id": "dev.nshhttp.monitor",
+  "version": "0.1.0",
+  "build": 1,
+  "theme": "theme.json",
+  "capabilities": {
+    "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] }
+  }
+}

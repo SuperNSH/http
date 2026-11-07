@@ -1,0 +1,6 @@
+✓ bundled packages/nsh-http/tests/live/streaming.app.tsx (23912 B in 5.2 ms)
+✓ packages/nsh-http/tests/live/streaming.test.ts › a chunked stream is consumed to the last line with progress along the way (342ms)
+✓ packages/nsh-http/tests/live/streaming.test.ts › download progress reports the content-length total on a real byte route (325ms)
+✓ packages/nsh-http/tests/live/streaming.test.ts › a multipart upload round-trips through the echo server's parser (322ms)
+✓ packages/nsh-http/tests/live/streaming.test.ts › a streamed request body echoes whole over the duplex fetch (342ms)
+✓ 4 tests: 4 passed, 0 failed (1.3s)

@@ -1,0 +1,4 @@
+✓ bundled packages/nsh-http/tests/live/sse.app.tsx (22839 B in 5.2 ms)
+✓ packages/nsh-http/tests/live/sse.test.ts › a live event stream delivers its events and stops when closed (2.9s)
+✓ packages/nsh-http/tests/live/sse.test.ts › a reconnect replays from Last-Event-ID, not from the first event (1.4s)
+✓ 2 tests: 2 passed, 0 failed (4.3s)
