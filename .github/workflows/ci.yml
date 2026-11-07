@@ -302,10 +302,12 @@ jobs:
           persist-credentials: false
       - name: Link the packages into demo-ts
         if: matrix.demo == 'demo-ts'
+        shell: bash
+        # Copies, not symlinks: Windows runners need extra privileges to create symlinks.
         run: |
           mkdir -p examples/demo-ts/node_modules
-          ln -s "$GITHUB_WORKSPACE/packages/nsh-http" examples/demo-ts/node_modules/nsh-http
-          ln -s "$GITHUB_WORKSPACE/deps/nsh-query/packages/nsh-query" examples/demo-ts/node_modules/nsh-query
+          cp -R packages/nsh-http examples/demo-ts/node_modules/nsh-http
+          cp -R deps/nsh-query/packages/nsh-query examples/demo-ts/node_modules/nsh-query
       - name: Package
         shell: bash
         working-directory: examples/${{ matrix.demo }}
