@@ -1,0 +1,13 @@
+{
+  "name": "capability-app",
+  "id": "dev.nshhttp.capability",
+  "version": "1.0.0",
+  "build": 1,
+  "rust": ".",
+  "root": "App",
+  "capabilities": {
+    "network": {
+      "hosts": ["127.0.0.1"]
+    }
+  }
+}

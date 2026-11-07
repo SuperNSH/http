@@ -1,0 +1,27 @@
+# Capability refusal, real macos target, rust root (2026-11-07)
+
+Command: ECHO_PORT=49266 nsh test --target macos crates/nsh-http/tests/capability-app
+The app's nsh.json declares only hosts: ["127.0.0.1"]. Echo server: the repo's own
+tools/echo-server on 127.0.0.1:49266 (restarted this run; pid in .runtime.json).
+
+Outcome, verbatim below: D2 (undeclared host localhost) returned 200 — NOT refused;
+D3 (redirect to refused.invalid) was followed into real DNS ("A server with the
+specified hostname could not be found") — NOT refused by capability. On 0.4.0 the
+native host never attaches a rust root's capabilities
+(nsh-platform-macos 0.4.0 src/native.rs:270: `App::Rust(_) => Policy::default().access()`,
+and nsh-core access.rs:1147: `is_unrestricted` skips the check). Refusal is provable
+only through the TSX/QuickJS path (docs/decision.md, experiment 1). The client's
+refused-by-capability classification is unit-proven in crates/nsh-http/tests/errors.rs
+against the engine's exact refusal message.
+
+--- raw run output ---
+
+✓ built the Rust crate nsh-app-capability (39.5s)
+→ the crates' Rust tests (`cargo test`) run without --target
+✓ built the development host for macOS (32.2s)
+RESULT D1 declared: status ok route=fast
+RESULT D2 undeclared-host: NOT REFUSED status=200
+RESULT D3 redirect-hop: Err network: A server with the specified hostname could not be found.
+RESULT CAPABILITY-RS-DONE
+✓ crates/nsh-http/tests/capability-app/App.test.tsx › capability refusal on a real macos target (rust root) (2.8s)
+✓ 1 test: 1 passed, 0 failed (35.0s)

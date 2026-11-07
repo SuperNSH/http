@@ -1472,6 +1472,7 @@ dependencies = [
  "nsh-engine",
  "nsh-testing",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
