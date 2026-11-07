@@ -1,0 +1,21 @@
+✓ bundled /Users/hmziq/fo/nsh-http/scratch/decision/exp-ts/App.tsx (6577 B in 2.7 ms)
+RESULT E1 drip: status=200 ttfb=1ms total=1209ms body="chunk0;chunk1;chunk2;chunk3;"
+RESULT E1b stream: status=200 ttfb=1ms total=315ms len=12
+RESULT E1c sse: events=6 firstEventAfter=1ms total=907ms
+RESULT E1d stream-upload: status=200 echoed=""part1-part2""
+RESULT E1e formdata: status=200 parts={"note":"milk","file":{"name":"cat.png","type":"image/png","size":9}}
+RESULT E1f websocket: got="echo:ping" after=0ms
+RESULT E2 abort-controller: rejected name=AbortError code=20 msg="signal is aborted without reason" after=160ms
+RESULT E2b signal-timeout: name=TimeoutError code=23 msg="signal timed out"
+RESULT E2c signal-any: name=TimeoutError code=23 msg="signal timed out"
+RESULT E3 redirect-manual: status=302 location=/fast redirected=false
+RESULT E3b redirect-follow: status=200 url=http://127.0.0.1:61383/fast body={"route":"fast"}
+RESULT E3c redirect-refused: rejected code=ERR_ACCESS_DENIED msg="Network request failed: fetch GET http://refused.invalid/next is not granted: ad"
+RESULT E4 refused-direct: code=ERR_ACCESS_DENIED permission=network msg="Network request failed: fetch GET http://localhost:61383/health is not"
+RESULT E5 status-503: status=503 ok=false body={"status":503}
+RESULT E5b closed-port: rejected msg="Network request failed: io: Connection refused (os error 61)"
+RESULT E6 slow-1200: ttfb=1203ms total=1203ms
+RESULT E6b bytes: requestBytes=17 responseBytes=63 contentLength=63
+RESULT DECISION-TS-DONE
+✓ /Users/hmziq/fo/nsh-http/scratch/decision/exp-ts/App.test.tsx › ts fetch surface on 0.4.0 (4.6s)
+✓ 1 test: 1 passed, 0 failed (4.6s)

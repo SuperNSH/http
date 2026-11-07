@@ -1,0 +1,12 @@
+✓ built the Rust crate nsh-app-exp-rs (334ms)
+✓ built the headless runner of nsh-app-exp-rs (274ms)
+RESULT R1 drip: status=200 total=1210ms body_len=28
+RESULT R2 sse: status=200 total=907ms body_len=84
+RESULT R3 localhost: NOT REFUSED status=200
+RESULT R4 redirect-follow: Err io: failed to lookup address information: nodename nor servname provided, or not known
+RESULT R4b manual-redirect: status=302 location=Some("/fast")
+RESULT R5 ureq-direct: status=200 (bypassed capabilities)
+RESULT R6 reqwest-direct: status=200 (bypassed capabilities)
+RESULT DECISION-RS-DONE
+✓ /Users/hmziq/fo/nsh-http/scratch/decision/exp-rs/App.test.tsx › rust fetch surface on 0.4.0 (2.2s)
+✓ 1 test: 1 passed, 0 failed (5.1s)

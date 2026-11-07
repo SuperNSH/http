@@ -1,0 +1,9 @@
+{
+  "name": "nsh-http tests",
+  "id": "dev.nshhttp.nsh-http",
+  "version": "0.1.0",
+  "build": 1,
+  "capabilities": {
+    "network": { "hosts": ["127.0.0.1", "localhost", "10.0.2.2"] }
+  }
+}

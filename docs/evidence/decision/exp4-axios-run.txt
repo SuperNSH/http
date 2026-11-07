@@ -1,0 +1,5 @@
+✓ bundled /Users/hmziq/fo/nsh-http/scratch/decision/exp-npm/App.tsx (150220 B in 10.6 ms)
+✓ /Users/hmziq/fo/nsh-http/scratch/decision/exp-npm/App.test.tsx › npm client reaches the server (120ms)
+✓ 1 test: 1 passed, 0 failed (125ms)
+✓ /Users/hmziq/fo/nsh-http/scratch/decision/exp-npm/App.test.tsx › npm client reaches the server (108ms)
+✓ 1 test: 1 passed, 0 failed (113ms)

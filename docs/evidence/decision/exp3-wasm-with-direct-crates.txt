@@ -1,0 +1,112 @@
+warning: (arm64) build/wasm-bindgen-shared-748e593f3136f493/build_script_build-748e593f3136f493.build_script_build.52441fe7bb3297c7-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/ring-5e8cd7ad615b8e03/build_script_build-5e8cd7ad615b8e03.build_script_build.2bc9ec85ed2ed6a8-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/ring-5e8cd7ad615b8e03/build_script_build-5e8cd7ad615b8e03.build_script_build.2bc9ec85ed2ed6a8-cgu.1.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/ring-5e8cd7ad615b8e03/build_script_build-5e8cd7ad615b8e03.build_script_build.2bc9ec85ed2ed6a8-cgu.2.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.00.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.01.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.02.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.03.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.04.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.05.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.06.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.07.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.08.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.09.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.10.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.11.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.12.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.13.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.14.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libcc-4e5100467f5cbe20.rlib(cc-4e5100467f5cbe20.cc.65eda91d8fdc6621-cgu.15.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libfind_msvc_tools-b828cfd6a8d019df.rlib(find_msvc_tools-b828cfd6a8d019df.find_msvc_tools.f5b3554dd4f79d91-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libfind_msvc_tools-b828cfd6a8d019df.rlib(find_msvc_tools-b828cfd6a8d019df.find_msvc_tools.f5b3554dd4f79d91-cgu.1.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libshlex-71625391d52b80d4.rlib(shlex-71625391d52b80d4.shlex.c740146ecbd3f726-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) build/wasm-bindgen-b2b96159fea6582b/build_script_build-b2b96159fea6582b.build_script_build.a58fea7411c600a8-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/markup5ever-4876dc5e7d28c4a8/build_script_build-4876dc5e7d28c4a8.build_script_build.d37456b96619deaf-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/markup5ever-4876dc5e7d28c4a8/build_script_build-4876dc5e7d28c4a8.build_script_build.d37456b96619deaf-cgu.1.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/markup5ever-4876dc5e7d28c4a8/build_script_build-4876dc5e7d28c4a8.build_script_build.d37456b96619deaf-cgu.2.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) deps/libstring_cache_codegen-4090a9b7e81c9127.rlib(string_cache_codegen-4090a9b7e81c9127.string_cache_codegen.bfb6a2968aa529d-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libstring_cache_codegen-4090a9b7e81c9127.rlib(string_cache_codegen-4090a9b7e81c9127.string_cache_codegen.bfb6a2968aa529d-cgu.1.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libstring_cache_codegen-4090a9b7e81c9127.rlib(string_cache_codegen-4090a9b7e81c9127.string_cache_codegen.bfb6a2968aa529d-cgu.2.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libstring_cache_codegen-4090a9b7e81c9127.rlib(string_cache_codegen-4090a9b7e81c9127.string_cache_codegen.bfb6a2968aa529d-cgu.3.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libstring_cache_codegen-4090a9b7e81c9127.rlib(string_cache_codegen-4090a9b7e81c9127.string_cache_codegen.bfb6a2968aa529d-cgu.4.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libquote-49a9862113aa35af.rlib(quote-49a9862113aa35af.quote.528169fb43ee026e-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.1.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.2.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.3.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.4.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libunicode_ident-86474059d22e53cb.rlib(unicode_ident-86474059d22e53cb.unicode_ident.48442bd76f6ac7e0-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libphf_codegen-27ea0fb1977b1170.rlib(phf_codegen-27ea0fb1977b1170.phf_codegen.4a3ed36c60423155-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libphf_generator-eca84bbd8a34afec.rlib(phf_generator-eca84bbd8a34afec.phf_generator.3d9b33b5316da0d-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/librand-d46073484c8aa7e6.rlib(rand-d46073484c8aa7e6.rand.4ccfc8c3be6cdac9-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/librand_core-5b9d9f5295a4492e.rlib(rand_core-5b9d9f5295a4492e.rand_core.b46cf5a2e0107f09-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libphf_shared-e8272e0e7dfc9020.rlib(phf_shared-e8272e0e7dfc9020.phf_shared.24b49058242a45ac-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsiphasher-f4cff2c0ddf78b5b.rlib(siphasher-f4cff2c0ddf78b5b.siphasher.5e61914d9737d235-cgu.0.rcgu.o) unable to open object file: No such file or directory
+    Checking zerofrom v0.1.8
+    Checking string_cache v0.8.9
+    Checking wasm-bindgen v0.2.130
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.1.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.2.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.3.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.4.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.5.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.6.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.7.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/html5ever-cb6dde787bd353f1/build_script_build-cb6dde787bd353f1.build_script_build.58df9c576140ebbd-cgu.8.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.00.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.01.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.02.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.03.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.04.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.05.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.06.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.07.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.08.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.09.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.10.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.11.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.12.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.13.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.14.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libsyn-98f47ede9c1a9383.rlib(syn-98f47ede9c1a9383.syn.4467c9cea0d52ffa-cgu.15.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libquote-49a9862113aa35af.rlib(quote-49a9862113aa35af.quote.528169fb43ee026e-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.0.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.1.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.2.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.3.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libproc_macro2-3a9fe9b8569385f0.rlib(proc_macro2-3a9fe9b8569385f0.proc_macro2.3dfbd8823fec97fc-cgu.4.rcgu.o) unable to open object file: No such file or directory
+warning: (arm64) deps/libunicode_ident-86474059d22e53cb.rlib(unicode_ident-86474059d22e53cb.unicode_ident.48442bd76f6ac7e0-cgu.0.rcgu.o) unable to open object file: No such file or directory
+    Checking getrandom v0.2.17
+warning: (arm64) build/httparse-1f91cc928aba3c2e/build_script_build-1f91cc928aba3c2e.build_script_build.e2b11f788cdd39b-cgu.0.rcgu.o unable to open object file: No such file or directory
+warning: (arm64) build/httparse-1f91cc928aba3c2e/build_script_build-1f91cc928aba3c2e.build_script_build.e2b11f788cdd39b-cgu.1.rcgu.o unable to open object file: No such file or directory
+    Checking half v2.7.1
+   Compiling rustls v0.23.46
+    Checking utf8parse v0.2.2
+    Checking same-file v1.0.6
+    Checking hexf-parse v0.2.1
+    Checking hashbrown v0.15.5
+    Checking fancy-regex v0.16.2
+   Compiling nsh-macros v0.4.0
+    Checking wuff v0.2.10
+    Checking sha2 v0.10.9
+    Checking httparse v1.10.1
+    Checking ordered-float v5.5.1
+    Checking bincode v1.3.3
+    Checking tokio v1.54.1
+    Checking taffy v0.15.1
+error: the wasm*-unknown-unknown targets are not supported by default, you may need to enable the "js" feature. For more information see: https://docs.rs/getrandom/#webassembly-support
+   --> /kache/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.2.17/src/lib.rs:346:9
+    |
+346 | /         compile_error!("the wasm*-unknown-unknown targets are not supported by \
+347 | |                         default, you may need to enable the \"js\" feature. \
+348 | |                         For more information see: \
+349 | |                         https://docs.rs/getrandom/#webassembly-support");
+    | |________________________________________________________________________^
+
+    Checking unicode-properties v0.1.5
+    Checking fnv v1.0.7
+error: could not compile `getrandom` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: (arm64) build/rustls-e9a28ad836a08884/build_script_build-e9a28ad836a08884.build_script_build.66d94a0ce31d681d-cgu.0.rcgu.o unable to open object file: No such file or directory

@@ -12,3 +12,7 @@ google-services.json
 GoogleService-Info.plist
 !**/fixtures/google-services.json
 !**/fixtures/GoogleService-Info.plist
+
+scratch/
+tools/echo-server/.runtime.json
+tools/echo-server/.runtime.log
