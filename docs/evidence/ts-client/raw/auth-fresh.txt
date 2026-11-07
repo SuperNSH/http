@@ -1,0 +1,7 @@
+✓ bundled packages/nsh-http/App.tsx (37288 B in 5.1 ms)
+✓ packages/nsh-http/tests/unit/auth.test.ts › ten parallel 401s share one refresh and all replay with the fresh token (128ms)
+✗ packages/nsh-http/tests/unit/auth.test.ts › a fresh token does not refresh (11ms)
+    expected false to be true
+    at <anonymous> (packages/nsh-http/tests/unit/auth.test.ts:36:46)
+    on screen: "parallel", "open load", "refreshes 1", "done 1", "errors 0"
+error 2 tests: 1 passed, 1 failed (143ms)

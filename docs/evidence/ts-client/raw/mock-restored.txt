@@ -1,0 +1,4 @@
+✓ bundled packages/nsh-http/App.tsx (37289 B in 7.0 ms)
+✓ packages/nsh-http/tests/unit/mock.test.ts › the mock answers statuses, failures, wildcards and delays, while the stubs answer another client (12ms)
+✓ packages/nsh-http/tests/unit/mock.test.ts › an unmocked request fails loudly instead of silently passing (1ms)
+✓ 2 tests: 2 passed, 0 failed (18ms)

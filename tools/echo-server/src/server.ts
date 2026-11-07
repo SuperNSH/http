@@ -377,9 +377,12 @@ export async function start(opts: ServerOpts = {}): Promise<EchoServerHandle> {
   const { logPath, runtimePath } = resolvePaths(opts);
   const log = createJsonLog(logPath);
   const state: AppState = { flakyHits: new Map() };
+  // ECHO_PORT pins the port because nsh test VMs on 0.4.0 cannot read .runtime.json —
+  // live suites and apps can only find the server on a port known in advance.
+  const requested = process.env.ECHO_PORT ? Number(process.env.ECHO_PORT) : 0;
   const server = Bun.serve({
     hostname: HOST,
-    port: 0,
+    port: requested,
     idleTimeout: IDLE_TIMEOUT,
     fetch: createFetchHandler(state, log),
   });

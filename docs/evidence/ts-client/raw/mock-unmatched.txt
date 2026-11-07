@@ -1,0 +1,5 @@
+✓ bundled packages/nsh-http/App.tsx (37271 B in 4.7 ms)
+✓ packages/nsh-http/tests/unit/mock.test.ts › the mock answers statuses, failures, wildcards and delays, while the stubs answer another client (9ms)
+✗ packages/nsh-http/tests/unit/mock.test.ts › an unmocked request fails loudly instead of silently passing (5.0s)
+    `text:ghost network` showing never happened in 5000 ms; on screen: ["load mock", "mock pending", "load boom", "boom pending", "load broken", "broken pending", "load wild", "wild pending", "load late", "late pending", "load stub", "stub pending", "load ghost", "ghost pending"]
+error 2 tests: 1 passed, 1 failed (5.0s)

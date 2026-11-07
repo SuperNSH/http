@@ -1,0 +1,7 @@
+✓ bundled packages/nsh-http/App.tsx (37147 B in 5.1 ms)
+✗ packages/nsh-http/tests/unit/mock.test.ts › the mock answers statuses, failures, wildcards and delays, while the stubs answer another client (10ms)
+    expected false to be true
+    at <anonymous> (packages/nsh-http/tests/unit/mock.test.ts:27:47)
+    on screen: "load mock", "mock true", "load boom", "boom http-status 500", "load broken", "broken network", "load wild", "wild true", "load late", "late true", "load stub", "stub Ada", "load ghost", "ghost pending"
+✓ packages/nsh-http/tests/unit/mock.test.ts › an unmocked request fails loudly instead of silently passing (1ms)
+error 2 tests: 1 passed, 1 failed (16ms)

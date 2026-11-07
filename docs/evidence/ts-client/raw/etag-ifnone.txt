@@ -1,0 +1,7 @@
+✓ bundled packages/nsh-http/App.tsx (37203 B in 4.9 ms)
+✗ packages/nsh-http/tests/unit/etag.test.ts › a revalidation sends If-None-Match and a 304 keeps the cached value (113ms)
+    expected undefined to be "\"a\""
+    at <anonymous> (packages/nsh-http/tests/unit/etag.test.ts:26:55)
+    on screen: "load etag", "reload etag", "etag 1", "cc 60000 true"
+✓ packages/nsh-http/tests/unit/etag.test.ts › Cache-Control directives parse (1ms)
+error 2 tests: 1 passed, 1 failed (119ms)

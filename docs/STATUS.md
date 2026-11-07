@@ -37,8 +37,8 @@ The script file is the orchestration spec; nothing in it was weakened to fit.
 
 - **decision**: **done and audited clean** (2 audit rounds: round 1 found a stub-mode claim without run evidence plus a figure mismatch; both fixed with real runs — `exp3-stub-bypass-run.txt` — and round 2 returned zero findings). Decision: both clients wrap NSH's own fetch — TSX over the global `fetch` (streams, ttfb 1 ms vs total 1209 ms on a drip route), Rust over `nsh_core::prelude::fetch` (body resolves at end-of-body, so `ttfbMs` is null on Rust). reqwest/ureq bypass capabilities+stubs and fail wasm32; ky/ofetch/axios run on QuickJS but add 18-147 KB over `fetch`.
 - **echo-server**: done. 127.0.0.1:61305 (pid in `tools/echo-server/.runtime.json`), 14 routes, 34 bun tests green, abort/Last-Event-ID/redirect-refusal behaviors verified live.
-- **rust client**: scaffold done (workspace mirrors `nsh-query`, four stub modules declared, `docs/behavior.md` 16 rows, fmt/clippy/test + wasm32 green). Core implementation starting.
-- **ts client**: scaffold done (11 modules exported, frozen `NetworkEvent` verbatim, check/build green zero warnings, 2 tests). Core implementation starting.
+- **rust client**: scaffold done (workspace mirrors `nsh-query`, four stub modules declared, `docs/behavior.md` 16 rows, fmt/clippy/test + wasm32 green). Core implementation in progress.
+- **ts client**: core implemented (26 tests green; check/build zero warnings; live refusal test proves the redirect hop against the echo server). Coordinator-confirmed gates. Audit round 1 returned 5 findings (port discovery false-skip → echo server being pinned to 8123; missing fail-once evidence; 3 low). Fix round in progress.
 - **monitor**: queued behind the two client cores.
 - **streaming and uploads**: queued behind the two client cores.
 - **examples and docs**: echo server done; demos follow the cores.

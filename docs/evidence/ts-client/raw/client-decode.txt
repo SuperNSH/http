@@ -1,0 +1,8 @@
+✓ bundled packages/nsh-http/App.tsx (37265 B in 4.2 ms)
+✗ packages/nsh-http/tests/unit/client.test.ts › a typed get joins the base url, substitutes path params and encodes the query (5.0s)
+    `text:user Ada` showing never happened in 5000 ms; on screen: ["url http://127.0.0.1:8123/users/7?full=true&tag=a&tag=b", "load user", "user error undefined", "echo", "echoed none", "save", "saved none", "patch", "patched none", "remove", "gone none"]
+✗ packages/nsh-http/tests/unit/client.test.ts › post, put, patch and delete decode their answers (5.0s)
+    `text:echoed 9` showing never happened in 5000 ms; on screen: ["url http://127.0.0.1:8123/users/7?full=true&tag=a&tag=b", "load user", "user none", "echo", "echoed error undefined", "save", "saved none", "patch", "patched none", "remove", "gone none"]
+✗ packages/nsh-http/tests/unit/client.test.ts › the client's default headers reach the request, and a call can add its own (5.0s)
+    `text:user Ada` showing never happened in 5000 ms; on screen: ["url http://127.0.0.1:8123/users/7?full=true&tag=a&tag=b", "load user", "user error undefined", "echo", "echoed none", "save", "saved none", "patch", "patched none", "remove", "gone none"]
+error 3 tests: 0 passed, 3 failed (15.0s)

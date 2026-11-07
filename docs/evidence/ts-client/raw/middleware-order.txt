@@ -1,0 +1,6 @@
+✓ bundled packages/nsh-http/App.tsx (37284 B in 5.2 ms)
+✗ packages/nsh-http/tests/unit/middleware.test.ts › requests flow first to last, responses last to first, and a rewrite reaches the route (9ms)
+    expected false to be true
+    at <anonymous> (packages/nsh-http/tests/unit/middleware.test.ts:21:43)
+    on screen: "middle", "order 21", "response-order 12", "rerouted ok true"
+error 1 test: 0 passed, 1 failed (13ms)

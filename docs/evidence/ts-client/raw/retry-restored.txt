@@ -1,0 +1,8 @@
+✓ bundled packages/nsh-http/App.tsx (37289 B in 4.1 ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › a flaky get retries on the manual clock until it succeeds (219ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › a post never retries (2ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › Retry-After in seconds is honored over the backoff (103ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › Retry-After as an HTTP-date is honored against the manual clock (110ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › a request whose body is a stream never retries (2ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › jitter follows the injected random, so the retry wait is exact (2ms)
+✓ 6 tests: 6 passed, 0 failed (443ms)

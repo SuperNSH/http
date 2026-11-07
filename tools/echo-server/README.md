@@ -3,10 +3,15 @@
 Local sandbox HTTP server for the nsh-http build. The client libraries, example
 apps and live test suites integrate against it; nothing reaches an external network.
 
-Start it detached (it binds a free port on 127.0.0.1 and records the port once
-`/health` answers):
+Start it detached. Live tests and demo apps look for the server on 127.0.0.1:8123,
+because nsh test VMs on 0.4.0 cannot read `.runtime.json` or inherit environment,
+so the port must be known before the app runs:
 
-    (cd tools/echo-server && nohup bun run src/server.ts >/tmp/nsh-http-echo.log 2>&1 &)
+    (cd tools/echo-server && ECHO_PORT=8123 nohup bun run src/server.ts >/tmp/nsh-http-echo.log 2>&1 &)
+
+`ECHO_PORT` overrides the port; plain `bun run src/server.ts` binds a random free
+port — the mode the test suite exercises. Either way the port is recorded in
+`.runtime.json` once `/health` answers.
 
 Run the tests:
 
@@ -15,8 +20,8 @@ Run the tests:
 ## The port file is the contract
 
 `tools/echo-server/.runtime.json` is `{"port": <port>, "pid": <pid>}`. The server
-binds port 0, fetches its own `/health`, and only then writes the file — read the
-port from there, never hardcode it. Tests never write it.
+fetches its own `/health`, and only then writes the file — read the port from
+there, never hardcode it. Tests never write it.
 
 `tools/echo-server/.runtime.log` gets one JSON line per request:
 

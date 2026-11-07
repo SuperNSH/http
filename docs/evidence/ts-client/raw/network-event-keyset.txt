@@ -1,0 +1,5 @@
+✗ packages/nsh-http/tests/unit/network-event.test.ts › the frozen NetworkEvent keeps its exact camelCase key set (0ms)
+    expected ["id","method","url","host","path","status","startedAtMs","durationMs","ttfbMs","requestBytes","responseBytes","error","initiator"] to equal ["id","method","url","host","path","status","startedAtMs","durationMs","ttfbMs","requestBytes","responseBytes","error"]
+    at <anonymous> (packages/nsh-http/tests/unit/network-event.test.ts:38:38)
+✓ packages/nsh-http/tests/unit/network-event.test.ts › the package's exports resolve at run time (0ms)
+error 2 tests: 1 passed, 1 failed (5ms)

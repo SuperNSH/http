@@ -176,7 +176,10 @@ would sit under nsh-http's middleware, not replace it.
   minus request start. Honest: headers are the observable event.
 - Rust: `null`. The public API resolves once, with the whole body; nothing
   earlier is observable (`docs/evidence/decision/exp5-ttfb.md`).
-- `durationMs` is end of body on both sides.
+- `durationMs` is end of body on both sides — except a TSX handed-off
+  stream, where the body leaves the client as a stream and the event is
+  emitted at handoff: `durationMs` then measures to handoff (the only
+  observable end the client owns).
 - `requestBytes` is known exactly wherever the client builds the body
   (everything except a TSX streamed body, where it accumulates as sent).
 - `responseBytes` comes from `Content-Length` when present (experiment 1,

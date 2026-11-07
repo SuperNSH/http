@@ -1,0 +1,4 @@
+packages/nsh-http/App.tsx(364,82): error TS2551: Property 'ttfbMs' does not exist on type 'NetworkEvent'. Did you mean 'ttfb'?
+packages/nsh-http/src/client.ts(329,7): error TS2561: Object literal may only specify known properties, but 'ttfbMs' does not exist in type 'NetworkEvent'. Did you mean to write 'ttfb'?
+packages/nsh-http/tests/unit/network-event.test.ts(33,5): error TS2561: Object literal may only specify known properties, but 'ttfbMs' does not exist in type 'NetworkEvent'. Did you mean to write 'ttfb'?
+error type check failed (exit status: 1)

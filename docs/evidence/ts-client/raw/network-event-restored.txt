@@ -1,0 +1,3 @@
+✓ packages/nsh-http/tests/unit/network-event.test.ts › the frozen NetworkEvent keeps its exact camelCase key set (0ms)
+✓ packages/nsh-http/tests/unit/network-event.test.ts › the package's exports resolve at run time (0ms)
+✓ 2 tests: 2 passed, 0 failed (5ms)

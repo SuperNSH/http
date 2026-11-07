@@ -1,0 +1,6 @@
+✓ bundled packages/nsh-http/App.tsx (37284 B in 4.2 ms)
+✗ packages/nsh-http/tests/unit/errors.test.ts › a network failure, an http status with its decoded body, and a decode failure each get their own kind (5.0s)
+    `text:status http-status 404 gone` showing never happened in 5000 ms; on screen: ["offline", "network network", "missing", "status decode 404 gone", "badjson", "decode none", "refuse", "refused none"]
+✓ packages/nsh-http/tests/unit/errors.test.ts › a timeout and a caller's cancel are kinds of their own (331ms)
+✓ packages/nsh-http/tests/unit/errors.test.ts › a host the app's capabilities do not declare is refused through the client (1ms)
+error 3 tests: 2 passed, 1 failed (5.4s)

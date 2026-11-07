@@ -1,0 +1,12 @@
+✓ bundled packages/nsh-http/App.tsx (37135 B in 5.1 ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › a flaky get retries on the manual clock until it succeeds (226ms)
+✗ packages/nsh-http/tests/unit/retry.test.ts › a post never retries (4ms)
+    expected 3 to be 1
+    at <anonymous> (packages/nsh-http/tests/unit/retry.test.ts:37:33)
+    on screen: "load flaky", "flaky pending", "load post", "post http-status 500", "load after", "after pending", "load after date", "after-date pending", "load stream", "stream pending", "load jitter", "jitter pending"
+✓ packages/nsh-http/tests/unit/retry.test.ts › Retry-After in seconds is honored over the backoff (109ms)
+✓ packages/nsh-http/tests/unit/retry.test.ts › Retry-After as an HTTP-date is honored against the manual clock (108ms)
+✗ packages/nsh-http/tests/unit/retry.test.ts › a request whose body is a stream never retries (5.0s)
+    `text:stream http-status 500` showing never happened in 5000 ms; on screen: ["load flaky", "flaky pending", "load post", "post pending", "load after", "after pending", "load after date", "after-date pending", "load stream", "stream network null", "load jitter", "jitter pending"]
+✓ packages/nsh-http/tests/unit/retry.test.ts › jitter follows the injected random, so the retry wait is exact (4ms)
+error 6 tests: 4 passed, 2 failed (5.5s)

@@ -1,0 +1,5 @@
+✓ bundled packages/nsh-http/App.tsx (37289 B in 4.8 ms)
+✓ packages/nsh-http/tests/unit/timeout.test.ts › a per-call timeout overrides the client's and cuts the attempt short (221ms)
+✓ packages/nsh-http/tests/unit/timeout.test.ts › the client timeout applies when the call brings none (215ms)
+✓ packages/nsh-http/tests/unit/timeout.test.ts › the caller's cancel wins over the timeout and reads as cancelled (214ms)
+✓ 3 tests: 3 passed, 0 failed (654ms)

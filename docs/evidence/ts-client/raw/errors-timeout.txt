@@ -1,0 +1,6 @@
+✓ bundled packages/nsh-http/App.tsx (37007 B in 4.8 ms)
+✓ packages/nsh-http/tests/unit/errors.test.ts › a network failure, an http status with its decoded body, and a decode failure each get their own kind (9ms)
+✗ packages/nsh-http/tests/unit/errors.test.ts › a timeout and a caller's cancel are kinds of their own (5.2s)
+    `text:per-call timeout` showing never happened in 5000 ms; on screen: ["start call", "per-call ok", "start client", "per-client pending", "start cancel", "do cancel", "cancelled pending"]
+✓ packages/nsh-http/tests/unit/errors.test.ts › a host the app's capabilities do not declare is refused through the client (3ms)
+error 3 tests: 2 passed, 1 failed (5.2s)

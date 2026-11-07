@@ -7,19 +7,20 @@ import type { HttpRequest } from "./middleware";
 /** Anything that can sit where the platform fetch sits. */
 export type Transport = (request: HttpRequest) => Promise<Response>;
 
-/** One canned answer, shaped like `open`'s stub responses; a function gets the request
- * and computes one (a 401 from the Authorization header, a flaky sequence). */
-export type MockRoute =
-  | {
-      status?: number;
-      headers?: Record<string, string>;
-      body?: unknown;
-      /** The answer waits this long; on a manual clock it takes `clock.runFor`. */
-      delay?: number;
-      /** The transport fails with this message instead of answering. */
-      error?: string;
-    }
-  | ((request: HttpRequest) => MockRoute | Promise<MockRoute>);
+/** One canned answer, shaped like `open`'s stub responses. */
+export interface MockAnswer {
+  status?: number;
+  headers?: Record<string, string>;
+  body?: unknown;
+  /** The answer waits this long; on a manual clock it takes `clock.runFor`. */
+  delay?: number;
+  /** The transport fails with this message instead of answering. */
+  error?: string;
+}
+
+/** A canned answer, or a function of the request that computes one (a 401 from the
+ * Authorization header, a flaky sequence). */
+export type MockRoute = MockAnswer | ((request: HttpRequest) => MockAnswer | Promise<MockAnswer>);
 
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
@@ -46,17 +47,18 @@ export function mockTransport(routes: Record<string, MockRoute>): Transport {
       const splitAt = candidate.indexOf(" ");
       const method = splitAt < 0 ? "GET" : candidate.slice(0, splitAt);
       const pattern = splitAt < 0 ? candidate : candidate.slice(splitAt + 1);
-      return method === request.method && (pattern === request.url || wildcard(pattern, key));
+      return method === request.method && (pattern === request.url || wildcard(pattern, request.url));
     });
     if (entry === undefined) {
       throw new TypeError(`no mock route for ${key}`);
     }
-    const route = await Promise.resolve(routes[entry](request));
-    if (route.error !== undefined) {
-      throw new TypeError(route.error);
+    const route = routes[entry];
+    const answer = typeof route === "function" ? await route(request) : route;
+    if (answer.error !== undefined) {
+      throw new TypeError(answer.error);
     }
-    if (route.delay) await sleep(route.delay);
-    return toResponse(route);
+    if (answer.delay) await sleep(answer.delay);
+    return toResponse(answer);
   };
 }
 

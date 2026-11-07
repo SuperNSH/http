@@ -1,0 +1,5 @@
+✓ bundled packages/nsh-http/App.tsx (37289 B in 4.9 ms)
+✓ packages/nsh-http/tests/unit/client.test.ts › a typed get joins the base url, substitutes path params and encodes the query (8ms)
+✓ packages/nsh-http/tests/unit/client.test.ts › post, put, patch and delete decode their answers (1ms)
+✓ packages/nsh-http/tests/unit/client.test.ts › the client's default headers reach the request, and a call can add its own (1ms)
+✓ 3 tests: 3 passed, 0 failed (16ms)

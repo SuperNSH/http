@@ -1,0 +1,6 @@
+✓ bundled packages/nsh-http/App.tsx (37278 B in 4.9 ms)
+✗ packages/nsh-http/tests/unit/observe.test.ts › each attempt emits one event with its method, url, host, path, status and timings (9ms)
+    expected false to be true
+    at <anonymous> (packages/nsh-http/tests/unit/observe.test.ts:22:50)
+    on screen: "observe ping", "observe gone", "observe offline", "observe flaky", "events 1", "last-status null", "last-error none", "last-ttfb set", "last-host 127.0.0.1", "last-path /ping"
+error 1 test: 0 passed, 1 failed (13ms)

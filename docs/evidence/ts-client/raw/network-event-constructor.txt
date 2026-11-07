@@ -1,0 +1,6 @@
+✓ packages/nsh-http/tests/unit/network-event.test.ts › the frozen NetworkEvent keeps its exact camelCase key set (0ms)
+✗ packages/nsh-http/tests/unit/network-event.test.ts › the package's exports resolve at run time (0ms)
+    broken on purpose
+    at Monitor (packages/nsh-http/src/monitor.ts:34:15)
+    at <anonymous> (packages/nsh-http/tests/unit/network-event.test.ts:44:14)
+error 2 tests: 1 passed, 1 failed (6ms)

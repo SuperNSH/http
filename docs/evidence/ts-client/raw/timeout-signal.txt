@@ -1,0 +1,8 @@
+✓ bundled packages/nsh-http/App.tsx (37007 B in 5.2 ms)
+✗ packages/nsh-http/tests/unit/timeout.test.ts › a per-call timeout overrides the client's and cuts the attempt short (5.3s)
+    `text:per-call timeout` showing never happened in 5000 ms; on screen: ["start call", "per-call ok", "start client", "per-client pending", "start cancel", "do cancel", "cancelled pending"]
+✗ packages/nsh-http/tests/unit/timeout.test.ts › the client timeout applies when the call brings none (5.3s)
+    `text:per-client timeout` showing never happened in 5000 ms; on screen: ["start call", "per-call pending", "start client", "per-client ok", "start cancel", "do cancel", "cancelled pending"]
+✗ packages/nsh-http/tests/unit/timeout.test.ts › the caller's cancel wins over the timeout and reads as cancelled (5.3s)
+    `text:cancelled cancelled` showing never happened in 5000 ms; on screen: ["start call", "per-call pending", "start client", "per-client pending", "start cancel", "do cancel", "cancelled ok"]
+error 3 tests: 0 passed, 3 failed (16.0s)

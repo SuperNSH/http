@@ -24,7 +24,7 @@ export function composeMiddleware(
   middlewares: Middleware[],
   endpoint: (request: HttpRequest) => Promise<Response>,
 ): (request: HttpRequest) => Promise<Response> {
-  return middlewares.reduceRight(
+  return middlewares.reduceRight<(request: HttpRequest) => Promise<Response>>(
     (next, middleware) => (request) => middleware(request, next),
     endpoint,
   );
