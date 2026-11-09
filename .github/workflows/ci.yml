@@ -368,3 +368,43 @@ jobs:
           gh release create latest dist/* --repo "$REPO" --target "$GITHUB_SHA" --latest \
             --title "Latest build" \
             --notes "Demo builds from main at $GITHUB_SHA, replaced on every push to main. Unsigned: macOS and Windows will warn before opening them, and the iOS build runs only in the simulator."
+
+  pages:
+    name: deploy the web demo to Pages
+    needs: demo
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Job-level permissions replace the workflow's, and deploy-pages authenticates with OIDC.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # The pages group, not ci-<ref>, so a deployment from an older run is cancelled by a newer one.
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: nsh-http-demo-ts-web
+          path: dist
+      - name: Unpack the web build
+        run: |
+          # NSH packages the web build inside a directory named after the app; the site root is its contents.
+          # NSH's web build uses relative asset paths, so it serves from https://supernsh.github.io/nsh-http/.
+          mkdir -p "$RUNNER_TEMP/site"
+          tar -xzf dist/nsh-http-demo-ts-web.tar.gz -C "$RUNNER_TEMP/site"
+          if [ ! -f "$RUNNER_TEMP/site/index.html" ] && [ "$(ls -A "$RUNNER_TEMP/site" | wc -l)" = 1 ]; then
+            sub="$(ls -A "$RUNNER_TEMP/site")"
+            mv "$RUNNER_TEMP/site/$sub"/* "$RUNNER_TEMP/site/" && rmdir "$RUNNER_TEMP/site/$sub"
+          fi
+          test -f "$RUNNER_TEMP/site/index.html"
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/site
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
