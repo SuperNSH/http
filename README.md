@@ -25,7 +25,8 @@ and an honest `ttfbMs`, because `await fetch()` resolves at the response head. T
 with the whole body, so streaming and SSE are TS-only and Rust's events record `ttfbMs: null` rather than a number
 nothing measured.
 
-Requires NSH 0.4.0.
+Requires NSH 0.5.0. The platform limits described here (the Rust transport, test VMs, the web runtime) were
+measured on 0.4.0 and have not been re-measured on 0.5.0.
 
 ## Rust
 
@@ -153,7 +154,7 @@ The Rust live tests (`#[ignore]`, `-- --ignored`) read the echo server's port fr
 
 ## Demo
 
-From a clean clone to the demo running against the local echo server. Prerequisites: `nsh` 0.4.0, `bun`, Rust
+From a clean clone to the demo running against the local echo server. Prerequisites: `nsh` 0.5.0, `bun`, Rust
 stable, and the `nsh-query` repository cloned alongside this one (`git clone --depth 1 https://github.com/SuperNSH/query ~/nsh-query`;
 `~/nsh-query` below; adjust the path to yours) — the demo's query screen consumes its package read-only by
 symlink. The package is TanStack Query v5 based; its dependencies install with

@@ -173,7 +173,7 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Install NSH
         env:
-          NSH_VERSION: v0.4.0
+          NSH_VERSION: v0.5.0
         run: |
           curl -fsSL https://nsh.dev/install.sh | sh
           echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
@@ -268,7 +268,7 @@ jobs:
       - name: Install NSH
         if: runner.os != 'Windows'
         env:
-          NSH_VERSION: v0.4.0
+          NSH_VERSION: v0.5.0
         run: |
           curl -fsSL https://nsh.dev/install.sh | sh
           echo "$HOME/.nsh/bin" >> "$GITHUB_PATH"
@@ -277,15 +277,15 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          NSH_VERSION: v0.4.0
+          NSH_VERSION: v0.5.0
         run: |
           irm https://nsh.dev/install.ps1 | iex
           "$env:LOCALAPPDATA\nsh\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-      - name: Work around NSH 0.4.0's crates.io packaging of nsh-platform-ios
+      - name: Build NSH's crates from the v0.5.0 source for the iOS package
         if: matrix.demo == 'demo-rs' && matrix.target == 'ios-simulator'
-        # The published crate includes a file it does not ship, so build NSH's crates from its v0.4.0 source.
+        # Added because 0.4.0's crates.io nsh-platform-ios did not package; a local 0.5.0 ios-simulator package built without it.
         run: |
-          git clone --quiet --depth 1 --branch v0.4.0 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
+          git clone --quiet --depth 1 --branch v0.5.0 https://github.com/longbridge/nsh "$RUNNER_TEMP/nsh-src"
           mkdir -p examples/demo-rs/.cargo
           {
             echo "[patch.crates-io]"
