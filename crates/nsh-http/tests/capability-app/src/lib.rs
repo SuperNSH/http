@@ -3,8 +3,8 @@
 //! `lines`; the TSX test reads them. Port comes from ECHO_PORT, else the echo
 //! server's `.runtime.json`.
 
-use nsh_core::prelude::*;
 use nsh_base::theme;
+use nsh_core::prelude::*;
 use nsh_http::{CallOptions, HttpClient};
 
 #[native_module("capability-app/native")]
@@ -60,7 +60,14 @@ async fn run_suite(lines: Signal<Vec<String>>) {
     let undeclared = format!("http://localhost:{port}/health");
     match fetch(HttpRequest::get(undeclared.clone())).await {
         Ok(response) => {
-            note(&lines, format!("D2 undeclared-host: NOT REFUSED status={}", response.status())).await
+            note(
+                &lines,
+                format!(
+                    "D2 undeclared-host: NOT REFUSED status={}",
+                    response.status()
+                ),
+            )
+            .await
         }
         Err(message) => note(&lines, format!("D2 undeclared-host: Err {message}")).await,
     }
@@ -68,9 +75,16 @@ async fn run_suite(lines: Signal<Vec<String>>) {
     // D3: the redirect hop — /redirect/refused answers 302 to
     // http://refused.invalid/next, a host no test app declares. The engine
     // re-checks every hop where it enforces grants.
-    match client.execute("GET", "/redirect/refused", &CallOptions::new()).await {
+    match client
+        .execute("GET", "/redirect/refused", &CallOptions::new())
+        .await
+    {
         Ok(response) => {
-            note(&lines, format!("D3 redirect-hop: NOT REFUSED status={}", response.status())).await
+            note(
+                &lines,
+                format!("D3 redirect-hop: NOT REFUSED status={}", response.status()),
+            )
+            .await
         }
         Err(error) => match error {
             nsh_http::Error::RefusedByCapability { message } => {
@@ -87,19 +101,14 @@ async fn run_suite(lines: Signal<Vec<String>>) {
 #[component]
 pub fn App() -> impl IntoElement {
     let lines = signal(Vec::<String>::new());
-    spawn(run_suite(lines.clone()));
+    spawn(run_suite(lines));
     view()
         .flex_1()
         .bg(move || theme().background)
         .text_color(move || theme().foreground)
-        .child(
-            view()
-                .flex_1()
-                .p_safe_area()
-                .child(each(
-                    lines,
-                    |line| line.clone(),
-                    |line, _index| text(move || line.get()).text_size(px(13.0)),
-                )),
-        )
+        .child(view().flex_1().p_safe_area().child(each(
+            lines,
+            |line| line.clone(),
+            |line, _index| text(move || line.get()).text_size(px(13.0)),
+        )))
 }
