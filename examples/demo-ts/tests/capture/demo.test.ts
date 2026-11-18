@@ -2,29 +2,23 @@
 // screens to docs/evidence/examples/ via app.screenshot. Only a real target
 // draws the app, so run it from the repository root with:
 //   nsh test examples/demo-ts/tests/capture/demo.test.ts --target macos
-// Headless, the echo and auth flows still run against the live server; the
-// query-capture leg skips loudly there, because its proof — the server's
-// aborted line — needs a real network stack (0.4.0's headless runner never
-// tells the server about an abort, docs/upstream-issues.md entry 2), and the
-// PNGs need drawing. On the web test target the app cannot load at all (the
-// page's "nsh" module does not export `lifecycle`, which nsh-query's compiled
-// code imports — entry 5): that run skips loudly too.
+// (or --target web; rename the PNGs to *-web.png before the next run, which
+// overwrites them). Headless, the echo and auth flows still run against the
+// live server, and the query-capture leg skips loudly because the PNGs need
+// drawing.
 import { open, test } from "nsh/test";
 import type { App } from "nsh/test";
 
 const NONE = "text:base none (ports 8123..8132)";
 
-// The page must have drawn SOMETHING before the flows make sense. On the web
-// test target the bundle fails module linking and nothing ever renders; there
-// the run skips loudly instead of failing with an empty screen.
+// The page must have drawn SOMETHING before the flows make sense; if nothing
+// renders, the run skips loudly instead of failing with an empty screen.
 async function settled(app: App): Promise<boolean> {
   try {
     await app.waitFor("text:/^base /", { timeout: 8000 });
     return true;
   } catch {
-    console.log(`SKIP (capture): the page never rendered the app — on the web test target this is the
-  0.4.0 missing-'lifecycle'-export limitation (docs/upstream-issues.md); capture on macos instead:
-  nsh test examples/demo-ts/tests/capture/demo.test.ts --target macos`);
+    console.log("SKIP (capture): the page never rendered the app");
     return false;
   }
 }
@@ -70,8 +64,7 @@ test("captures the demo screens", async () => {
   await app.press("id:load-slow");
   await app.waitUntil(() => app.shows("text:slow 1200"));
   if (!target) {
-    console.log(`SKIP (capture): this is the headless runner — the query-capture leg needs a real
-  network stack (the server's aborted line, docs/upstream-issues.md) and the PNGs need drawing:
+    console.log(`SKIP (capture): this is the headless runner — the PNGs need drawing:
   nsh test examples/demo-ts/tests/capture/demo.test.ts --target macos`);
     return;
   }

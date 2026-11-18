@@ -1,4 +1,4 @@
-import { mount, platform, signal, Storage, Text, View, Scroll } from "nsh";
+import { List, mount, platform, signal, Storage, Text, View } from "nsh";
 import { createClient, type Aggregate, type HttpClient, type NetworkEvent, type Observer, instrumentedFetch, Monitor } from "nsh-http";
 import { SearchInput } from "./ui/input";
 
@@ -113,25 +113,23 @@ function App() {
         </Each>
         <SearchInput placeholder="Filter by host or path" testID="filter" value={filter()} onChange={(value) => filter.set(value)} />
       </View>
-      {/* Each, not List: the ring buffer bounds this collection, and on 0.4.0 a List
-          keeps rows in insertion order whenever an update reorders the array — a fresh
-          sorted copy assigned in one shot, with or without keyExtractor, still renders
-          the slow call (which lands last) at the bottom; Each reorders correctly.
-          Evidence: docs/evidence/monitor/list-experiment.md. */}
-      <Scroll class="flex-1" testID="call-list">
-        <View class="px-4 pb-4">
-          <If when={visible().length === 0}>
-            <View class="items-center py-8">
-              <Text class="text-sm text-muted-foreground">
-                {calls().length === 0 ? "Waiting for the first calls…" : `No calls match "${filter().trim()}"`}
-              </Text>
-            </View>
-          </If>
-          <Each of={visible()}>
-            {(event) => <CallRow event={event} />}
-          </Each>
+      <If when={visible().length === 0}>
+        <View class="items-center px-4 py-8">
+          <Text class="text-sm text-muted-foreground">
+            {calls().length === 0 ? "Waiting for the first calls…" : `No calls match "${filter().trim()}"`}
+          </Text>
         </View>
-      </Scroll>
+      </If>
+      <List
+        class="flex-1"
+        contentClass="px-4 pb-4"
+        each={visible()}
+        estimatedItemSize={52}
+        keyExtractor={(event: NetworkEvent) => event.id}
+        testID="call-list"
+      >
+        {(event) => <CallRow event={event} />}
+      </List>
     </View>
   );
 }

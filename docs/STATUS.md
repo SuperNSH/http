@@ -25,11 +25,42 @@ window) served as the local sandbox; demo apps live in `examples/`.
 | 3 | Ten parallel requests, expired token → exactly one refresh, all succeed (test) | **verified both sides** | Rust `crates/nsh-http/tests/auth.rs` (ten parallel 401s → 1 refresh, all replay with the fresh bearer; plus a dropped-lead recovery test); TS `packages/nsh-http/tests/unit/auth.test.ts`; demo screens show `Refreshes 1 / Succeeded 3 / Failed 0` live (`docs/evidence/examples/demo-ts-auth.png`, vision-passed) |
 | 4 | Retry honors `Retry-After` on a manual clock; POST does not retry by default | **verified both sides** | Rust `tests/retry.rs` (seconds AND HTTP-date on `Clock::manual`; idempotent-only; POST never; never after a stream started); TS `tests/unit/retry.test.ts` (same, jitter follows the injected random) |
 | 5 | Timeout, caller cancel, refused capability each give their own error (test) | **verified both sides** | Rust `tests/timeout.rs` (per-client/per-call deadlines raced against caller cancellation via `Spawned::cancel`) + `tests/errors.rs` six-case taxonomy; TS `tests/unit/timeout.test.ts` ("the caller's cancel wins over the timeout and reads as cancelled") + `tests/unit/errors.test.ts` |
-| 6 | Request outside `capabilities.network` refused through the client, incl. redirect hop | **verified on the TSX path; Rust path upstream-blocked on 0.4.0 (documented)** | TSX: unit refusal (`errors.test.ts` — the headless capability gate refuses an undeclared-host stub) + live refusal incl. the redirect hop (`tests/live/capability.test.ts` vs echo `/redirect/refused`, runs for real, 66/66 suite). Rust: cannot be enforced anywhere on 0.4.0 — headless runner drops rust-root capabilities (`nsh-testing/src/runner.rs:224`) and native hosts attach allow-all (`nsh-platform-macos/src/native.rs:270`), proven by the real-target run `docs/evidence/rust-client/capability-macos-run.txt` (undeclared host returns 200, redirect followed). The Rust client's refusal CLASSIFICATION is tested against the engine's exact message (fixture format verified at `nsh-engine/src/access.rs:31`). Upstream issue 1 in [docs/upstream-issues.md](upstream-issues.md) |
+| 6 | Request outside `capabilities.network` refused through the client, incl. redirect hop | **verified on both paths on 0.6.0 (the Rust path was upstream-blocked on 0.4.0)** | 0.6.0 re-audit: Rust `tests/errors.rs` `an_undeclared_host_and_an_undeclared_redirect_hop_are_refused_by_the_engine` (stub network, root declares `127.0.0.1`) and `tests/live_capability.rs` (echo server; direct host and redirect hop) both give `RefusedByCapability`; output `docs/evidence/rust-client/capability-0.6.0-run.txt`; each fails once with the declaration removed. TSX evidence from the 0.4.0 build, unchanged: TSX: unit refusal (`errors.test.ts` — the headless capability gate refuses an undeclared-host stub) + live refusal incl. the redirect hop (`tests/live/capability.test.ts` vs echo `/redirect/refused`, runs for real, 66/66 suite). On 0.4.0 the Rust path could not be enforced at all (upstream issue 1, fixed on 0.6.0).  |
 | 7 | Monitor records real slow/fast timings on macos, ios, android, web; slow sorts on top; screenshots saved and looked at | **verified — all four targets captured and vision-passed** | `docs/evidence/monitor/{macos,macos-light,ios,android,web}-ready.png`. Vision judge viewed all five and passed them: slow (1204-1228 ms) sorts above fast/health on every target; filter field + per-host aggregates visible; styled and legible. Android answered via `10.0.2.2:8123` (the app's cross-target probe working as designed); web needed the echo server's CORS fix (now in). Honest caveat: Android's fast-route timings are elevated (emulator NAT + contention with the in-flight slow request) — real timings, sort unaffected |
 | 8 | Redaction: token in URL or header never appears in a recorded event (test) | **verified both sides, audit clean** | Rust `tests/monitor.rs`: serialized-event scans prove tokens in URLs, secret headers, and free-text (error/initiator) echoes never appear; `[redacted]` masking idempotent. TS `tests/unit/monitor.test.ts`: mirrored semantics (normalized secret query/header lists matching the Rust reference), criterion-8 test incl. a quoted JSON set-cookie echo |
 | 9 | `nsh-query` example cancels its request when the query is replaced; server log proves it | **verified — wire proof on a real target** | `examples/demo-ts` replaces the query while `/slow` is in flight; the live test reads the server log over the network (GET `/log`) and asserts the aborted line; on `--target macos` the aborted line (start + aborted, no end) is proven in `docs/evidence/examples/abort-runner-gap.md`; the capture `demo-ts-query.png` (vision-passed) shows "Server log check: yes · the aborted request is in the log". Headless SKIP is loud and documented (upstream issue 2: headless UreqNetwork never cancels server-side) |
 | 10 | README gets a person from clean clone to running demo | **verified by literal clean-clone walks** | `README.md` (nsh-query shape: pitch, two-versions table, why-two-versions, both usages, behavior table → docs/behavior.md, exact Test commands, Demo section). Auditors walked the README in fresh /tmp copies twice: round 1 found the 8123-taken collision (fixed: server falls through the documented 8123..8132 window, `.runtime.json` records the real port, demo apps probe the same window; rehearsed live with the repo's server holding 8123); round 2 walked the Demo section in a fresh clone and found no failing step |
+
+## Re-audit on 0.6.0 (2026-11-19)
+
+Run on `nsh 0.6.0` with the echo server up on 8123. What changed and how it was verified:
+
+- **Rust capability refusal now works** (was upstream issue 1). New hermetic test in `crates/nsh-http/tests/errors.rs`
+  and rewritten `tests/live_capability.rs`; both fail when the root's declaration is removed. This exposed a Rust
+  parity bug, fixed in `crates/nsh-http/src/client.rs`: an absolute `scheme://` path was joined onto the base URL
+  (the TS client passes it through), and a query was always appended with `?` even when the path had one (TS
+  uses `&`). Unit test `client::tests::an_absolute_path_ignores_the_base_and_query_joins_with_the_right_separator`
+  fails when `is_absolute` is broken.
+- **Cancellation proof (criterion 9) now runs headless too.** `examples/demo-ts/tests/live/abort.test.ts` no longer
+  skips on the headless runner; it passes headless, on `--target macos` (`docs/evidence/examples/abort-macos-0.6.0.txt`
+  shows the server's `aborted` lines) and its capture leg on `--target web`. Fails when the final `yes` check is
+  broken. `capture/demo.test.ts` comments updated; captures re-taken on macos and web and looked at:
+  `docs/evidence/examples/demo-ts-{echo,query,auth}.png` and `*-web.png` (the web run was impossible on 0.4.0,
+  issue 5).
+- **The monitor screen uses `List` again** (brief requirement; `Each` was a 0.4.0 workaround, issue 3). Slow call on
+  top asserted in `examples/monitor-app/tests/unit/ready.test.ts`; fails with the sort reversed. Re-captured on macos
+  and web: `docs/evidence/monitor/macos-ready.png`, `web-ready.png` (slow 1207-1214 ms above 12-25 ms, looked at).
+  The ios and android captures are the 0.4.0 ones and were NOT re-taken on 0.6.0 (the shared simulators and the
+  emulator belong to other builds; `nsh test --target ios|android` picks its own device).
+- Docs updated: `README.md` (0.6.0 platform facts), `docs/decision.md` ("Re-measured on 0.6.0"),
+  `docs/upstream-issues.md` (issues 1, 2, 3, 5 marked fixed on 0.6.0; 4 stands).
+
+Gates on 0.6.0: `cargo fmt --all -- --check` 0; `cargo clippy --all-targets -- -D warnings` 0; `cargo test` 70 passed
+(17 lib incl. the new unit test, tests/ incl. the new errors.rs test) + `-- --ignored` 7 passed; wasm32 `cargo check` 0;
+`nsh check` / `nsh build` (zero warnings) / `nsh test` for `packages/nsh-http` 66/66, `examples/demo-ts` 9/9,
+`examples/monitor-app` 4/4; `bun test` in `tools/echo-server` 43/43; `examples/demo-rs` fmt, clippy, test 1/1, live 1/1.
+`nsh test` prints `warn the status bar is not granted` per test for the packages' test hosts; it is a runner
+notice, not an `nsh build` warning.
 
 ## Per-area record
 
@@ -52,11 +83,9 @@ directly with the Agent tool; the script was never weakened.
 
 ## Not verified / honest caveats
 
-- **Criterion 6 on the Rust path** is unachievable on 0.4.0 (upstream issue 1): rust roots
-  run unrestricted everywhere, so "refused through the client" can only be proven on the
-  QuickJS/TSX path. What is verified for Rust: the client's refusal classification against
-  the engine's exact message, and the documented negative (real-target run).
-- **demo-ts web capture** does not exist: upstream issue 5 — the `nsh test --target web`
+- **Criterion 6 on the Rust path** was blocked on 0.4.0 and is proven on 0.6.0 headless (see the re-audit);
+  not re-run on a real native target on 0.6.0.
+- **demo-ts web capture** (superseded: exists on 0.6.0, see the re-audit); on 0.4.0 it did not exist: upstream issue 5 — the `nsh test --target web`
   page's `nsh` module lacks the `lifecycle` export, so any bundle importing nsh-query
   fails module linking (evidence `docs/evidence/examples/web-missing-lifecycle.png`,
   vision-verified). The monitor's web capture (no nsh-query import) is real and passed.

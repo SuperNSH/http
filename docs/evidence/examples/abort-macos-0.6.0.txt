@@ -1,0 +1,10 @@
+$ cd examples/demo-ts && nsh test tests/live/abort.test.ts --target macos   (nsh 0.6.0, echo server on 8123)
+✓ tests/live/abort.test.ts › replacing the query aborts the in-flight /slow request, and the server's log proves it (1.5s)
+✓ 1 test: 1 passed, 0 failed (1.5s)
+--- server log tail ---
+{"event":"start","id":"5c01b2da-30fe-4b30-88d4-8d4da67fccb4","ts":1795030709980,"method":"GET","path":"/health"}
+{"event":"end","id":"5c01b2da-30fe-4b30-88d4-8d4da67fccb4","ts":1795030709980,"status":200,"ms":0}
+{"event":"start","id":"b982ad63-202e-4119-817b-1ced63c0a989","ts":1795030710415,"method":"GET","path":"/slow"}
+{"event":"aborted","id":"b982ad63-202e-4119-817b-1ced63c0a989","ts":1795030710696,"path":"/slow"}
+{"event":"start","id":"66eaa959-4f19-4ddf-a225-35fd972ec819","ts":1795030710702,"method":"GET","path":"/slow"}
+{"event":"aborted","id":"66eaa959-4f19-4ddf-a225-35fd972ec819","ts":1795030711257,"path":"/slow"}

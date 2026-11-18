@@ -212,3 +212,16 @@ would sit under nsh-http's middleware, not replace it.
 - Monitoring: per-attempt `NetworkEvent`s with ttfbMs exactly as above;
   `requestBytes`/`responseBytes` from the sources in the previous section;
   no invented numbers.
+
+## Re-measured on 0.6.0
+
+The decision stands. What changed on 0.6.0, from runs in this repository:
+
+- Rust roots are capability-checked. `Root::capabilities_json` (set by nsh's generated `app_root()` from
+  `nsh.json`) makes the engine refuse `fetch` to an undeclared host and to an undeclared redirect hop;
+  `crates/nsh-http/tests/errors.rs` and `tests/live_capability.rs` prove it, output in
+  `docs/evidence/rust-client/capability-0.6.0-run.txt`. Experiment 3b's "unrestricted" result no longer holds,
+  and it strengthens the choice: only the platform fetch goes through that check.
+- The Rust `fetch` doc (`nsh-core-0.6.0/src/element/ambient.rs`) still says the whole body arrives with the
+  response, so streaming, SSE and `ttfbMs` stay as above: TS-only streaming, `ttfbMs: null` from Rust.
+- The headless live network closes an aborted request (`docs/evidence/examples/abort-macos-0.6.0.txt`).

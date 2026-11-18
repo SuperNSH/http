@@ -1,0 +1,11 @@
+$ cargo test -p nsh-http --test errors   (nsh 0.6.0; stub network, root declares network.hosts=[127.0.0.1])
+test refusal_is_a_different_error_from_a_network_failure ... ok
+test a_streamed_request_body_fails_loudly_instead_of_sending_empty ... ok
+test an_undeclared_host_and_an_undeclared_redirect_hop_are_refused_by_the_engine ... ok
+test every_error_lands_in_its_own_case ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+$ cargo test -p nsh-http --test live_capability -- --ignored   (echo server on 8123, UreqNetwork)
+test the_pipeline_reaches_the_real_echo_server_and_decodes ... ok
+test an_undeclared_redirect_hop_and_an_undeclared_host_are_refused ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

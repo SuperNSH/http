@@ -1,18 +1,13 @@
 //! LIVE: these tests run against the real echo server (`tools/echo-server`,
 //! port from its `.runtime.json`) over `UreqNetwork`, not the stubs.
 //!
-//! They CANNOT prove capability refusal: on 0.4.0 the headless runner never
-//! attaches a rust root's capabilities (`nsh-testing/src/runner.rs:224`,
-//! `Reply::Root => Built::Rust(root())` with no `capabilities_json`), and the
-//! engine short-circuits its `capabilities.network` check when the access is
-//! unrestricted (`nsh-engine/src/lib.rs:2248`, `is_unrestricted`). So a
-//! headless refusal here would be a FALSE PASS. What they do cover: the
-//! whole client pipeline against a real server (decode, redirect following),
-//! and — asserted, as documentation of the upstream gap — that the Rust path
-//! does NOT refuse the undeclared redirect hop where the TSX path does.
+//! The root declares `capabilities.network` for `127.0.0.1` only
+//! (`Root::capabilities_json`, what nsh's generated code does from
+//! `nsh.json`); since 0.5 the engine checks a Rust root's requests against
+//! it, so an undeclared host and an undeclared redirect hop are refused
+//! through the client as `Error::RefusedByCapability`.
 //! Run with `cargo test -- --ignored` while the echo server is up; they fail
-//! loudly when the port file is missing. The real-target proof lives in
-//! `tests/capability-app/` (`nsh test --target macos`).
+//! loudly when the port file is missing.
 
 mod common;
 
@@ -58,8 +53,17 @@ fn live_rig() -> common::Rig {
                 .build()
         },
         Live,
-        |_| Root::of::<LiveApp>(),
+        |_| Root::of::<LiveApp>().capabilities_json(r#"{"network":{"hosts":["127.0.0.1"]}}"#),
     )
+}
+
+/// One line per outcome: `<label> refused`, `<label> status=N` or `<label> err ...`.
+fn record<T: std::fmt::Debug>(lines: Signal<Vec<String>>, label: &str, outcome: &Result<T, Error>) {
+    lines.update(|all| match outcome {
+        Ok(response) => all.push(format!("{label} ok {response:?}")),
+        Err(Error::RefusedByCapability { .. }) => all.push(format!("{label} refused")),
+        Err(error) => all.push(format!("{label} err {error}")),
+    });
 }
 
 #[component]
@@ -84,15 +88,18 @@ fn LiveApp() -> impl IntoElement {
                     .unwrap_or_else(|| "undecoded".to_owned())
             ))
         });
-        // The redirect the TSX app is refused on: where does the Rust path land?
         let refused = client
             .execute("GET", "/redirect/refused", &CallOptions::new())
             .await;
-        scenario.lines.update(|all| match &refused {
-            Ok(response) => all.push(format!("redirect status={}", response.status())),
-            Err(Error::RefusedByCapability { .. }) => all.push("redirect refused".to_owned()),
-            Err(error) => all.push(format!("redirect err {error}")),
-        });
+        record(scenario.lines, "redirect", &refused);
+        let other_host = client
+            .execute(
+                "GET",
+                &format!("http://localhost:{}/fast", echo_port()),
+                &CallOptions::new(),
+            )
+            .await;
+        record(scenario.lines, "direct", &other_host);
         done.set(true);
     });
     scenario.view()
@@ -110,20 +117,17 @@ fn the_pipeline_reaches_the_real_echo_server_and_decodes() {
 
 #[test]
 #[ignore = "LIVE: needs the echo server up (cargo test -- --ignored)"]
-fn the_undeclared_redirect_hop_is_documented_not_refused_on_0_4_0() {
+fn an_undeclared_redirect_hop_and_an_undeclared_host_are_refused() {
     let mut rig = live_rig();
     rig.app.wait_for("text:done").unwrap();
-    // Upstream gap (docs/decision.md, experiment 3b): the engine's
-    // `is_unrestricted` short-circuit lets a rust root follow the redirect to
-    // refused.invalid. The TSX path refuses; this one cannot. If a future nsh
-    // starts refusing here, the assertion below flips to prove it.
     assert!(
-        !common::shows_containing(&rig.app, "redirect refused"),
-        "refusal fired: the engine now enforces capabilities on the Rust path — flip this test"
+        common::shows_containing(&rig.app, "redirect refused"),
+        "the hop to an undeclared host is refused: {:?}",
+        rig.app.screen().texts()
     );
     assert!(
-        common::shows_containing(&rig.app, "redirect status=")
-            || common::shows_containing(&rig.app, "redirect err"),
-        "the redirect outcome was recorded"
+        common::shows_containing(&rig.app, "direct refused"),
+        "an undeclared host on the first request is refused: {:?}",
+        rig.app.screen().texts()
     );
 }

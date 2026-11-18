@@ -278,7 +278,7 @@ impl HttpClient {
         let client = &self.0;
         // Guarded before the transport: `fetch` acts on the engine's context,
         // which only exists inside a component's task.
-        if client.base_url.is_empty() {
+        if client.base_url.is_empty() && !is_absolute(path) {
             return Err(Error::Network {
                 message: "no base url is set on this client (HttpClient::builder().base_url(..))"
                     .to_owned(),
@@ -693,21 +693,35 @@ fn build_url(
         path = path.replace(&format!(":{name}"), &encode_param(value));
     }
     let base = base.trim_end_matches('/');
-    let path = path.trim_start_matches('/');
-    let mut url = if base.is_empty() {
-        format!("/{path}")
+    let mut url = if is_absolute(&path) {
+        path
+    } else if base.is_empty() {
+        format!("/{}", path.trim_start_matches('/'))
     } else {
-        format!("{base}/{path}")
+        format!("{base}/{}", path.trim_start_matches('/'))
     };
     if !query.is_empty() {
         let pairs: Vec<String> = query
             .iter()
             .map(|(name, value)| format!("{}={}", encode_query(name), encode_query(value)))
             .collect();
-        url.push('?');
+        url.push(if url.contains('?') { '&' } else { '?' });
         url.push_str(&pairs.join("&"));
     }
     url
+}
+
+/// A `scheme://` URL: it passes through without the base URL, as in the TS client.
+fn is_absolute(path: &str) -> bool {
+    path.split_once("://").is_some_and(|(scheme, _)| {
+        scheme
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic())
+            && scheme
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'))
+    })
 }
 
 /// Replaces the first header named `name` (case-insensitively) or appends it.
@@ -795,7 +809,7 @@ pub struct HttpClientBuilder {
 }
 
 impl HttpClientBuilder {
-    /// Every call's URL is `base_url` + the call's path.
+    /// Every call's URL is `base_url` + the call's path; an absolute `scheme://` path ignores it.
     #[must_use]
     pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into();
@@ -875,5 +889,27 @@ impl HttpClientBuilder {
             refresh: SingleFlight::default(),
             noise: Mutex::new(0x853c_49e6_748f_ea9b),
         }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::build_url;
+
+    #[test]
+    fn an_absolute_path_ignores_the_base_and_query_joins_with_the_right_separator() {
+        let query = [("a".to_owned(), "1".to_owned())];
+        assert_eq!(
+            build_url("http://base/", "http://other/x", &[], &[]),
+            "http://other/x"
+        );
+        assert_eq!(
+            build_url("http://base/", "/x", &[], &query),
+            "http://base/x?a=1"
+        );
+        assert_eq!(
+            build_url("http://base", "x?b=2", &[], &query),
+            "http://base/x?b=2&a=1"
+        );
     }
 }

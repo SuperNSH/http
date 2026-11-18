@@ -241,3 +241,77 @@ fn a_streamed_request_body_fails_loudly_instead_of_sending_empty() {
     let events = rig.events.lock().unwrap();
     assert_eq!(events.len(), 0, "the refusal is not an attempt");
 }
+
+// --- the engine's own refusal, from a root that declares its network ----------
+
+static GATE: OnceLock<Fixture<Nothing>> = OnceLock::new();
+
+fn gate_rig() -> common::Rig {
+    let hop = common::json_with_headers(302, "", &[("location", "http://evil.io/landed")]);
+    Fixture::start(
+        &GATE,
+        vec![
+            route(
+                &format!("GET {TEST_BASE}/ok"),
+                json(200, r#"{"value":"ok"}"#),
+            ),
+            route(&format!("GET {TEST_BASE}/hop"), hop),
+            route(
+                "GET http://evil.io/direct",
+                json(200, r#"{"value":"leaked"}"#),
+            ),
+            route(
+                "GET http://evil.io/landed",
+                json(200, r#"{"value":"leaked"}"#),
+            ),
+        ],
+        |builder| builder.retry(nsh_http::RetryPolicy::off()).build(),
+        Nothing,
+        |_| Root::of::<GateApp>().capabilities_json(r#"{"network":{"hosts":["127.0.0.1"]}}"#),
+    )
+}
+
+#[component]
+fn GateApp() -> impl IntoElement {
+    let scenario = common::scenario();
+    let done = scenario.done;
+    let client = GATE
+        .get()
+        .expect("gate_rig() builds the fixture before the app mounts")
+        .client
+        .clone();
+    spawn(async move {
+        for (label, path) in [
+            ("declared", "/ok".to_owned()),
+            ("direct", "http://evil.io/direct".to_owned()),
+            ("hop", "/hop".to_owned()),
+        ] {
+            let outcome = client
+                .execute("GET", &path, &nsh_http::CallOptions::new())
+                .await;
+            let word = match &outcome {
+                Ok(_) => "ok".to_owned(),
+                Err(Error::RefusedByCapability { .. }) => "refused".to_owned(),
+                Err(error) => format!("other {error}"),
+            };
+            scenario
+                .lines
+                .update(|all| all.push(format!("{label}:{word}")));
+        }
+        done.set(true);
+    });
+    scenario.view()
+}
+
+#[test]
+fn an_undeclared_host_and_an_undeclared_redirect_hop_are_refused_by_the_engine() {
+    let mut rig = gate_rig();
+    rig.app.wait_for("text:done").unwrap();
+    for line in ["declared:ok", "direct:refused", "hop:refused"] {
+        assert!(
+            common::shows_containing(&rig.app, line),
+            "{line}: {:?}",
+            rig.app.screen().texts()
+        );
+    }
+}

@@ -20,13 +20,16 @@ axios). One shared implementation is impossible: a TSX app runs on NSH's prebuil
 its own, and Rust generics and JS closures do not cross that boundary. So each side gets a full client, and the two
 suites cover one behavior list.
 
-The platform splits them on 0.4.0. TSX streams: response bodies, streamed request bodies (`duplex: "half"`), SSE,
+The platform splits them (measured on 0.4.0; the Rust `fetch` doc on 0.6.0 still says the whole body arrives with
+the response). TSX streams: response bodies, streamed request bodies (`duplex: "half"`), SSE,
 and an honest `ttfbMs`, because `await fetch()` resolves at the response head. The Rust transport resolves once,
 with the whole body, so streaming and SSE are TS-only and Rust's events record `ttfbMs: null` rather than a number
 nothing measured.
 
-Requires NSH 0.6.0. The platform limits described here (the Rust transport, test VMs, the web runtime) were
-measured on 0.4.0 and have not been re-measured on 0.5.0 or 0.5.1.
+Requires NSH 0.6.0. Re-measured on 0.6.0: a Rust root's `capabilities.network` is now enforced (a refusal on a
+direct call and on a redirect hop), the headless live network closes an aborted request, `List` reorders, and
+`nsh test --target web` loads nsh-query apps (`docs/upstream-issues.md`). Not re-measured, and kept as the 0.4.0
+numbers: the Rust transport's whole-body behavior and the `ttfbMs` rules in `docs/decision.md`.
 
 ## Rust
 
@@ -149,8 +152,8 @@ nsh test examples/demo-ts                                              # live te
 
 The Rust live tests (`#[ignore]`, `-- --ignored`) read the echo server's port from
 `tools/echo-server/.runtime.json` and fail loudly when the server is not up. The headless runner's live network on
-0.4.0 never tells the server about an aborted request — the wire-level cancellation proof needs a real target:
-`nsh test examples/demo-ts/tests/live/abort.test.ts --target macos` (`docs/evidence/examples/abort-runner-gap.md`).
+0.6.0 closes an aborted request, so the wire-level cancellation proof runs headless and on a target:
+`nsh test examples/demo-ts/tests/live/abort.test.ts [--target macos]` (`docs/evidence/examples/abort-macos-0.6.0.txt`).
 
 ## Demo
 
@@ -160,7 +163,7 @@ stable, and the `nsh-query` repository cloned alongside this one (`git clone --d
 symlink. The package is TanStack Query v5 based; its dependencies install with
 `(cd ~/nsh-query/packages/nsh-query && bun install --ignore-scripts)`.
 
-**The port contract.** The echo server's pinned default is `127.0.0.1:8123`; test VMs on 0.4.0 cannot read files
+**The port contract.** The echo server's pinned default is `127.0.0.1:8123`; test VMs cannot read files
 or inherit environment, so the port must be known before an app runs. When that port is taken (`EADDRINUSE` —
 another checkout's server, another project), the server falls through the window **8123..8132** in ascending
 order before giving up, and records the ACTUAL chosen port in `tools/echo-server/.runtime.json`. The two demos
@@ -215,7 +218,6 @@ Both demos auto-report one line per outcome. Their tests drive the same screens:
 `examples/demo-rs/tests/demo.rs` and `examples/demo-ts/tests/unit/`, the real server in each area's live tests, and
 `app.screenshot` captures into `docs/evidence/examples/` from
 `nsh test examples/demo-ts/tests/capture/demo.test.ts --target macos` and
-`nsh test examples/demo-rs/tests/capture/demo.test.ts --target macos`. One platform caveat, upstream on 0.4.0:
-under `nsh test --target web` the page's `nsh` module lacks the `lifecycle` export, so the TS demo — which uses
-nsh-query — cannot load there; its web capture does not exist and the tests skip loudly naming
-[docs/upstream-issues.md](docs/upstream-issues.md) (`nsh run --target web` works; native targets work).
+`nsh test examples/demo-rs/tests/capture/demo.test.ts --target macos`. `--target web` works for the TS demo on 0.6.0 as well; rename the PNGs
+to `*-web.png` before the next target's run, which overwrites them. The 0.4.0 web-linking failure is kept in
+[docs/upstream-issues.md](docs/upstream-issues.md) as fixed.

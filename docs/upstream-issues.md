@@ -1,7 +1,7 @@
 # Upstream issues
 
 Findings about NSH 0.4.0 and the sibling libraries made during this build, recorded read-only — nothing here edits
-another repository. Each entry states where it bites in this repository and the workaround in use. Line numbers
+another repository. Entries 1, 2, 3 and 5 were re-run on 0.6.0 and are fixed there; each says so under "Status on 0.6.0". Each entry states where it bites in this repository and the workaround in use. Line numbers
 refer to the exact installed sources (`nsh` 0.4.0 e626a8d; crates `~/.cargo/registry/src/*/nsh-*-0.4.0` and the
 reference checkout `~/fo/.refs/nsh-v0.4.0`, which is the same code).
 
@@ -27,6 +27,14 @@ Workaround in this repo: capability refusal is tested through TSX apps or a real
 `cargo test` alone, and the demo's Rust live tests document the gap instead of asserting refusal. Upstream fix:
 attach the rust root's `capabilities_json` in the headless runner and pass the app policy in native hosts.
 
+Status on 0.6.0: fixed. A rust root's `Root::capabilities` / `Root::capabilities_json` (what nsh's generated
+`app_root()` sets from `nsh.json`) is checked by the engine for `fetch`, redirect hops included. Evidence:
+`docs/evidence/rust-client/capability-0.6.0-run.txt` — `crates/nsh-http/tests/errors.rs`
+(`an_undeclared_host_and_an_undeclared_redirect_hop_are_refused_by_the_engine`, stub network) and
+`tests/live_capability.rs` (real echo server, `#[ignore]`) both get `Error::RefusedByCapability` for an undeclared
+host and for a hop to one; both fail when the declaration is removed. The headless runner still builds a rust
+root without the `nsh.json` declaration, so a test must set it on the `Root` itself.
+
 ## 2. The headless runner's live network never tells the server about an aborted request
 
 Severity: medium (silent behavior difference between the headless runner and every real target).
@@ -45,6 +53,10 @@ Workaround in this repo: the cancellation proof (`examples/demo-ts/tests/live/ab
 `examples/demo-rs` capture flows) runs on `--target`; on the headless runner it skips loudly and names that
 command. Upstream fix: `UreqNetwork` should race the fetch future's drop/cancel against the socket and close it.
 
+Status on 0.6.0: fixed. The headless live network now closes the request on abort: with the skip removed,
+`examples/demo-ts/tests/live/abort.test.ts` passes headless and the server log shows `aborted` for both `/slow`
+requests, and the same test passes on `--target macos` and `--target web` (`docs/evidence/examples/abort-macos-0.6.0.txt`).
+
 ## 3. TSX `List` does not apply incremental reorders on 0.4.0
 
 Severity: medium for anything that keeps a sorted list under live updates.
@@ -58,6 +70,9 @@ reorder of the old one.
 
 Workaround in this repo: none needed — the demo's screens render results in arrival order. Upstream fix: `List`
 should reconcile rows by key on reorder, not only on append/remove.
+
+Status on 0.6.0: fixed. The monitor screen's calls list is a `List` again, and the sorted order (slow on top)
+renders and is asserted in `examples/monitor-app/tests/unit/ready.test.ts` (fails when the sort is reversed).
 
 ## 4. nsh-query does not cancel a released key's in-flight load
 
@@ -108,3 +123,6 @@ detect the never-rendering page (nothing matches `text:/^base /` within 8 s) and
 the demo's web capture therefore does not exist on 0.4.0, and the wire proofs run on macos/ios/android.
 Upstream fix: provide `lifecycle` (ideally the full reactive export set) in the test web page's `"nsh"` module,
 as the dev page effectively does.
+
+Status on 0.6.0: fixed. `nsh test --target web` now loads the demo that imports nsh-query and runs the echo,
+query-cancel (server log answers `yes`) and auth flows; captures in `docs/evidence/examples/demo-ts-*-web.png`.
