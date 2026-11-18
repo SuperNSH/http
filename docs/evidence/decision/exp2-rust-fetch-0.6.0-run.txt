@@ -1,0 +1,23 @@
+# Rust fetch on 0.6.0 against tools/echo-server (8123), 2026-11-19
+## nsh test scratch/decision/exp-rs-0.6 (headless)
+✓ built the Rust crate nsh-app-exp-rs (298ms)
+✓ built the headless runner of nsh-app-exp-rs (375ms, 1 warning: -v shows it)
+warn the status bar is not granted: add `"statusBar": true` to capabilities in nsh.json
+RESULT R1 stream: status=200 total=908ms body_len=160
+RESULT R2 sse: status=200 total=1511ms body_len=240
+RESULT R3 slow: status=200 total=1201ms
+RESULT DECISION-RS-DONE
+✓ scratch/decision/exp-rs-0.6/App.test.tsx › rust fetch surface on 0.6.0 (3.6s)
+✓ 1 test: 1 passed, 0 failed (6.8s)
+## nsh test --target macos scratch/decision/exp-rs-0.6
+✓ built the Rust crate nsh-app-exp-rs (303ms)
+→ the crates' Rust tests (`cargo test`) run without --target
+✓ built the development host for macOS (363ms, 1 warning: -v shows it)
+warn the status bar is not granted: add `"statusBar": true` to capabilities in nsh.json
+warn the application (its main window, menu, tray, global shortcuts, quitting and restarting) is not granted: add `"application": true` to capabilities in nsh.json
+RESULT R1 stream: status=200 total=932ms body_len=160
+RESULT R2 sse: status=200 total=1510ms body_len=240
+RESULT R3 slow: status=200 total=1214ms
+RESULT DECISION-RS-DONE
+✓ scratch/decision/exp-rs-0.6/App.test.tsx › rust fetch surface on 0.6.0 (6.6s)
+✓ 1 test: 1 passed, 0 failed (6.9s)

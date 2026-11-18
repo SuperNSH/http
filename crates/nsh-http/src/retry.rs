@@ -93,7 +93,7 @@ impl RetryPolicy {
     /// Whether a `(attempt+1)`th send may happen for `error` after
     /// `attempts_done` failed ones. A body stream already started disqualifies
     /// the send: the server may have consumed part of it. The Rust pipeline
-    /// never streams a request body (the 0.4.0 transport resolves once, with
+    /// never streams a request body (the 0.6.0 transport resolves once, with
     /// the whole response), so it always passes `false`.
     pub fn should_retry(
         &self,

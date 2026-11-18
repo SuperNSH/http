@@ -1,6 +1,6 @@
 //! Server-sent events with reconnect and `Last-Event-ID` (behavior row 14).
 //!
-//! Honest limits on 0.4.0 (docs/decision.md, experiment 2): the Rust transport
+//! Honest limits on 0.6.0 (docs/decision.md, experiment 2): the Rust transport
 //! resolves a request once, when the whole body has arrived — so events are
 //! parsed when the server closes the stream, not one by one as they are sent.
 //! Reconnect (with backoff) and the `Last-Event-ID` header still work exactly
@@ -343,7 +343,7 @@ impl SseBackoff {
 /// reconnect-with-`Last-Event-ID` loop as one future.
 ///
 /// Build the client for it with `.without_timeout()` — a deadline races the
-/// whole request on 0.4.0 (there is no headers-only phase to time out), so a
+/// whole request on 0.6.0 (there is no headers-only phase to time out), so a
 /// client timeout would cut off a quiet stream — and with
 /// `RetryPolicy::off()`: reconnecting is this type's job, and the client's
 /// retries would run beside it.

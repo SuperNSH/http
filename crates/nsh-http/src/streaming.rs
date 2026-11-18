@@ -1,5 +1,5 @@
 //! Response and request bodies and progress, as honestly as the Rust side of
-//! nsh 0.4.0 allows (docs/decision.md, experiment 2).
+//! nsh 0.6.0 allows (docs/decision.md, experiment 2).
 //!
 //! The limits, stated plainly:
 //!
@@ -19,7 +19,7 @@
 //!   completion with the full byte count — which is exact, because the client
 //!   built the body (`docs/decision.md`: `requestBytes` is known wherever the
 //!   client builds the body). A streamed request body (`HttpBody::Stream`) is
-//!   refused loudly by the client on 0.4.0; send bytes instead.
+//!   refused loudly by the client on 0.6.0; send bytes instead.
 //!
 //! None of this weakens the taxonomy: downloads and uploads go through the
 //! client pipeline (middleware, observer, retries, timeout), so their

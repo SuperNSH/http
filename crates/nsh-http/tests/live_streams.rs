@@ -4,7 +4,7 @@
 //! the reconnect's `Last-Event-ID` replay, a real `/multipart` parse, and a
 //! real `Content-Length` on `/bytes/:n`. They carry `#[ignore]` (run with
 //! `cargo test -- --ignored` while the server is up) and fail loudly when the
-//! port file is missing. The honest 0.4.0 limit under test: the Rust transport
+//! port file is missing. The honest 0.6.0 limit under test: the Rust transport
 //! resolves a request only at end of body (docs/decision.md, experiment 2),
 //! so a dripped stream arrives whole and progress reports exactly once.
 

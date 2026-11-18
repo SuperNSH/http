@@ -22,7 +22,7 @@ use crate::monitor::{NetworkEvent, Observer};
 use crate::retry::{RetryPolicy, parse_retry_after};
 
 /// The HTTP call behind every client request: NSH's own `fetch` by default
-/// (docs/decision.md), or a [`crate::MockTransport`] in tests. The 0.4.0
+/// (docs/decision.md), or a [`crate::MockTransport`] in tests. The 0.6.0
 /// transport resolves once, with the whole response.
 pub trait Transport: Send + Sync + 'static {
     /// Sends the request; `Err` carries the engine's or the mock's failure
@@ -615,11 +615,11 @@ impl<F: Future + Unpin> Future for Timed<F> {
 }
 
 /// The error a streamed request body gets (docs/decision.md, experiment 2:
-/// on 0.4.0 the Rust transport resolves once, with the whole response, and
+/// on 0.6.0 the Rust transport resolves once, with the whole response, and
 /// only the JS host drives a streamed send).
 fn stream_unsupported() -> Error {
     Error::Network {
-        message: "the Rust transport cannot stream a request body on 0.4.0 (docs/decision.md, experiment 2): send bytes instead".to_owned(),
+        message: "the Rust transport cannot stream a request body on 0.6.0 (docs/decision.md, experiment 2): send bytes instead".to_owned(),
     }
 }
 
@@ -785,7 +785,7 @@ fn network_event(
     }
 }
 
-/// What the client would put on the wire (the 0.4.0 Rust path never streams).
+/// What the client would put on the wire (the 0.6.0 Rust path never streams).
 fn request_bytes_of(request: &HttpRequest) -> usize {
     match &request.body {
         HttpBody::Empty | HttpBody::Stream => 0,

@@ -1,6 +1,6 @@
 //! Behavior row 14: SSE connect, reconnect with backoff and `Last-Event-ID`,
 //! and clean cancellation, on stubs and the manual clock. The stub cannot
-//! stream a body in pieces (`StubNetwork` answers whole), which on 0.4.0 is
+//! stream a body in pieces (`StubNetwork` answers whole), which on 0.6.0 is
 //! exactly what the production Rust transport does too (`docs/decision.md`,
 //! experiment 2): the parse-then-reconnect machinery here runs against the
 //! same shape the wire gives it. The wire-level proof — a real server

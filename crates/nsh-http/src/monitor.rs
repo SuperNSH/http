@@ -370,7 +370,7 @@ fn host_and_path(url: &str) -> (String, String) {
     )
 }
 
-/// What the request would put on the wire (the 0.4.0 Rust path never streams).
+/// What the request would put on the wire (the 0.6.0 Rust path never streams).
 fn request_bytes_of(request: &HttpRequest) -> u64 {
     match &request.body {
         HttpBody::Empty | HttpBody::Stream => 0,

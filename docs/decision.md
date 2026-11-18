@@ -222,6 +222,11 @@ The decision stands. What changed on 0.6.0, from runs in this repository:
   `crates/nsh-http/tests/errors.rs` and `tests/live_capability.rs` prove it, output in
   `docs/evidence/rust-client/capability-0.6.0-run.txt`. Experiment 3b's "unrestricted" result no longer holds,
   and it strengthens the choice: only the platform fetch goes through that check.
-- The Rust `fetch` doc (`nsh-core-0.6.0/src/element/ambient.rs`) still says the whole body arrives with the
-  response, so streaming, SSE and `ttfbMs` stay as above: TS-only streaming, `ttfbMs: null` from Rust.
+- Rust `fetch` re-measured on 0.6.0 against the echo server, headless and on `--target macos`
+  (`docs/evidence/decision/exp2-rust-fetch-0.6.0-run.txt`, app `scratch/decision/exp-rs-0.6`): `/stream` (headers at
+  once, 4 chunks) resolves once after 908 ms (macos 932 ms) with all 160 bytes; `/sse` (5 events) resolves once after
+  1511 ms with 240 bytes, only after the server closes; `/slow?delay=1200` after 1201 ms. `HttpResponse` is still
+  `{ head, body: Vec<u8> }` and the `fetch` doc still says the whole body arrives with the response (`HttpBody::Stream`
+  and `FetchEvent::{Head, Data}` exist, but only the JS host drives them). The 0.4.0 limit is unchanged: TS-only
+  streaming, `ttfbMs: null` from Rust.
 - The headless live network closes an aborted request (`docs/evidence/examples/abort-macos-0.6.0.txt`).

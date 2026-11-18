@@ -1,5 +1,5 @@
 //! Behavior row 13, the Rust half: response bodies, download progress, upload
-//! progress — with the honest 0.4.0 limits (docs/decision.md, experiment 2)
+//! progress — with the honest 0.6.0 limits (docs/decision.md, experiment 2)
 //! asserted, not just documented: progress fires exactly once, when the whole
 //! body is in, because that is the only moment the transport observes.
 //!

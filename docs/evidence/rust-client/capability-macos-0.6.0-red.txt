@@ -1,0 +1,23 @@
+✓ built the Rust crate nsh-app-capability (7.2s)
+→ the crates' Rust tests (`cargo test`) run without --target
+✓ built the development host for macOS (11.7s, 1 warning: -v shows it)
+warn the status bar is not granted: add `"statusBar": true` to capabilities in nsh.json
+warn the application (its main window, menu, tray, global shortcuts, quitting and restarting) is not granted: add `"application": true` to capabilities in nsh.json
+RESULT D1 declared: status ok route=fast
+RESULT D2 undeclared-host: NOT REFUSED status=200
+RESULT D3 redirect-hop: REFUSED fetch GET http://refused.invalid/next is not granted: add `refused.invalid` to capabilities.network in nsh.json
+RESULT CAPABILITY-RS-DONE
+✗ crates/nsh-http/tests/capability-app/App.test.tsx › capability refusal on a real macos target (rust root) (5.6s)
+    expected false to be true
+    at <anonymous> (crates/nsh-http/tests/capability-app/App.test.tsx:20:106)
+    on screen: "D1 declared: status ok route=fast", "D2 undeclared-host: NOT REFUSED status=200", "D3 redirect-hop: REFUSED fetch GET http://refused.invalid/next is not granted: add `refused.invalid` to capabilities.network in nsh.json", "CAPABILITY-RS-DONE"
+error 1 test: 0 passed, 1 failed (17.3s)
+RESULT D1 declared: status ok route=fast
+RESULT D2 undeclared-host: REFUSED fetch GET http://localhost:8123/health is not granted: add `localhost` to capabilities.network in nsh.json
+RESULT D3 redirect-hop: Err network: A server with the specified hostname could not be found.
+RESULT CAPABILITY-RS-DONE
+✗ crates/nsh-http/tests/capability-app/App.test.tsx › capability refusal on a real macos target (rust root) (4.2s)
+    expected false to be true
+    at <anonymous> (crates/nsh-http/tests/capability-app/App.test.tsx:21:109)
+    on screen: "D1 declared: status ok route=fast", "D2 undeclared-host: REFUSED fetch GET http://localhost:8123/health is not granted: add `localhost` to capabilities.network in nsh.json", "D3 redirect-hop: Err network: A server with the specified hostname could not be found.", "CAPABILITY-RS-DONE"
+error 1 test: 0 passed, 1 failed (24.1s)

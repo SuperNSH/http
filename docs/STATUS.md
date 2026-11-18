@@ -50,8 +50,7 @@ Run on `nsh 0.6.0` with the echo server up on 8123. What changed and how it was 
 - **The monitor screen uses `List` again** (brief requirement; `Each` was a 0.4.0 workaround, issue 3). Slow call on
   top asserted in `examples/monitor-app/tests/unit/ready.test.ts`; fails with the sort reversed. Re-captured on macos
   and web: `docs/evidence/monitor/macos-ready.png`, `web-ready.png` (slow 1207-1214 ms above 12-25 ms, looked at).
-  The ios and android captures are the 0.4.0 ones and were NOT re-taken on 0.6.0 (the shared simulators and the
-  emulator belong to other builds; `nsh test --target ios|android` picks its own device).
+  The ios and android captures were re-taken on 0.6.0 afterwards (see "Leftovers closed" below).
 - Docs updated: `README.md` (0.6.0 platform facts), `docs/decision.md` ("Re-measured on 0.6.0"),
   `docs/upstream-issues.md` (issues 1, 2, 3, 5 marked fixed on 0.6.0; 4 stands).
 
@@ -61,6 +60,32 @@ Gates on 0.6.0: `cargo fmt --all -- --check` 0; `cargo clippy --all-targets -- -
 `examples/monitor-app` 4/4; `bun test` in `tools/echo-server` 43/43; `examples/demo-rs` fmt, clippy, test 1/1, live 1/1.
 `nsh test` prints `warn the status bar is not granted` per test for the packages' test hosts; it is a runner
 notice, not an `nsh build` warning.
+
+## Leftovers closed on 0.6.0 (2026-11-19)
+
+- **iOS and Android monitor captures re-taken on 0.6.0**, on own devices (simulator `nsh-http-0.6`, iPhone 17 Pro, iOS 27;
+  AVD `nsh-http-0.6`, Pixel 8, android-37, on a private adb server via `ANDROID_ADB_SERVER_PORT=5038` because
+  `nsh test --target android` takes the first device `adb devices` lists and the shared server held another build's
+  emulator). Command: `nsh test examples/monitor-app/tests/capture/ready.capture.test.ts --target ios --device <udid>`
+  / `--target android`, both pass. `docs/evidence/monitor/ios-ready.png` (looked at: slow `/slow?delay=1200` 1237 ms,
+  ttfb 1232 ms, on top of `/health` 162 ms and `/fast` 24 ms; filter field and host aggregate visible) and
+  `android-ready.png` (looked at: slow 1225 ms on top; `10.0.2.2` aggregate 3 calls 0% errors; the `127.0.0.1` row
+  is the app's cross-target probe failing on the emulator, which cannot reach the host's loopback, as designed).
+- **Criterion 6 on a real native target (macos), Rust root, 0.6.0**: `crates/nsh-http/tests/capability-app` now asserts
+  `REFUSED` for an undeclared host (`localhost`) and for the redirect hop (`refused.invalid`), both through
+  `HttpClient::execute` as `RefusedByCapability`; `nsh test --target macos` passes
+  (`docs/evidence/rust-client/capability-macos-0.6.0-run.txt`). Fails once per leg when the declaration is widened
+  (`capability-macos-0.6.0-red.txt`: declaring `localhost` gives `NOT REFUSED status=200`; declaring `refused.invalid`
+  gives a DNS failure). `capability-macos-run.txt` is the superseded 0.4.0 run (nothing refused). iOS simulator not
+  run for this item; macos is the same engine check. Its D2 leg now goes through the client rather than raw `fetch`.
+- **Rust `fetch` re-measured on 0.6.0**: unchanged, whole body, one resolution, so `ttfbMs` stays `null` from Rust
+  (`docs/evidence/decision/exp2-rust-fetch-0.6.0-run.txt`, headless and macos; numbers in `docs/decision.md`).
+  The code comments and README that said "0.4.0" for this limit now say 0.6.0. The scratch test's first run failed
+  on a wrong lower bound for `/stream` (908 ms, not 1.2 s); the bound was fixed to what the route sends.
+- Env note: on this Mac a cold C build (`onig_sys`) hung under the `kache` rustc/cc wrapper; the runs above used
+  `CARGO_BUILD_RUSTC_WRAPPER= HOST_CC=cc HOST_CXX=c++ CC_KNOWN_WRAPPER_CUSTOM=` and a PATH without the kache shims.
+- Gates: `cargo fmt --all -- --check` 0, `cargo clippy --all-targets -- -D warnings` 0, `cargo test` and
+  `cargo test -- --ignored` all pass (Rust-side comment edits only plus the capability-app).
 
 ## Per-area record
 
@@ -83,8 +108,8 @@ directly with the Agent tool; the script was never weakened.
 
 ## Not verified / honest caveats
 
-- **Criterion 6 on the Rust path** was blocked on 0.4.0 and is proven on 0.6.0 headless (see the re-audit);
-  not re-run on a real native target on 0.6.0.
+- **Criterion 6 on the Rust path** was blocked on 0.4.0; proven on 0.6.0 headless and on a real macos target
+  (see "Leftovers closed"). Not run on the iOS simulator.
 - **demo-ts web capture** (superseded: exists on 0.6.0, see the re-audit); on 0.4.0 it did not exist: upstream issue 5 — the `nsh test --target web`
   page's `nsh` module lacks the `lifecycle` export, so any bundle importing nsh-query
   fails module linking (evidence `docs/evidence/examples/web-missing-lifecycle.png`,

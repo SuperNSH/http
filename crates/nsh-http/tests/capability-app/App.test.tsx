@@ -2,16 +2,10 @@
 // .runtime.json) through the rust-root capability-app on a real target
 // (`nsh test --target macos crates/nsh-http/tests/capability-app`).
 //
-// What it can and cannot prove: the app's nsh.json declares ONLY
-// `127.0.0.1`, so a working engine would refuse D2 (undeclared host) and D3
-// (redirect hop to refused.invalid) with ERR_ACCESS_DENIED. On 0.4.0 the
-// native host never attaches a rust root's capabilities
-// (`nsh-platform-macos/src/native.rs:270`, `App::Rust(_) =>
-// Policy::default().access()`), so the run below documents what actually
-// happens rather than asserting a refusal that would be a false pass. The
-// assertions hold for BOTH outcomes and the lines themselves are the
-// evidence; if a future nsh enforces on this path, the lines flip to REFUSED
-// and this comment should be updated.
+// The app's nsh.json declares ONLY `127.0.0.1`, so the native host must
+// refuse D2 (undeclared host) and D3 (redirect hop to refused.invalid)
+// through the client as RefusedByCapability. Not provable on 0.4.0, where a
+// rust root was never restricted (docs/upstream-issues.md, issue 1).
 import { expect, open, test } from "nsh/test";
 
 test("capability refusal on a real macos target (rust root)", async () => {
@@ -22,7 +16,7 @@ test("capability refusal on a real macos target (rust root)", async () => {
 
   // D1: the declared host works through the client — the pipeline is live.
   expect(texts.some((t) => t.startsWith("D1 declared:") && t.includes("route=fast"))).toBe(true);
-  // D2/D3: the outcomes are recorded, whichever way the host rules.
-  expect(texts.some((t) => t.startsWith("D2 undeclared-host:"))).toBe(true);
-  expect(texts.some((t) => t.startsWith("D3 redirect-hop:"))).toBe(true);
+  // D2/D3: the engine's grant check, classified by the client.
+  expect(texts.some((t) => t.startsWith("D2 undeclared-host: REFUSED") && t.includes("localhost"))).toBe(true);
+  expect(texts.some((t) => t.startsWith("D3 redirect-hop: REFUSED") && t.includes("refused.invalid"))).toBe(true);
 }, 60000);

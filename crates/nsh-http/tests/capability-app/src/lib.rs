@@ -1,6 +1,5 @@
-//! The capability-refusal probe: what the 0.4.0 engine actually does with a
-//! rust root whose nsh.json declares only `127.0.0.1`. Three outcomes land in
-//! `lines`; the TSX test reads them. Port comes from ECHO_PORT, else the echo
+//! The capability-refusal probe: a rust root whose nsh.json declares only
+//! `127.0.0.1`. Three outcomes land in `lines`; the TSX test reads them. Port comes from ECHO_PORT, else the echo
 //! server's `.runtime.json`.
 
 use nsh_base::theme;
@@ -55,10 +54,13 @@ async fn run_suite(lines: Signal<Vec<String>>) {
         Err(error) => note(&lines, format!("D1 declared: Err {error}")).await,
     }
 
-    // D2: an undeclared host (localhost is not in the declaration). Where the
-    // host enforces grants, this is refused (ERR_ACCESS_DENIED).
+    // D2: an undeclared host (localhost is not in the declaration), through
+    // the client, which must classify the engine's refusal.
     let undeclared = format!("http://localhost:{port}/health");
-    match fetch(HttpRequest::get(undeclared.clone())).await {
+    match client
+        .execute("GET", &undeclared, &CallOptions::new())
+        .await
+    {
         Ok(response) => {
             note(
                 &lines,
@@ -69,12 +71,15 @@ async fn run_suite(lines: Signal<Vec<String>>) {
             )
             .await
         }
-        Err(message) => note(&lines, format!("D2 undeclared-host: Err {message}")).await,
+        Err(nsh_http::Error::RefusedByCapability { message }) => {
+            note(&lines, format!("D2 undeclared-host: REFUSED {message}")).await
+        }
+        Err(other) => note(&lines, format!("D2 undeclared-host: Err {other}")).await,
     }
 
     // D3: the redirect hop — /redirect/refused answers 302 to
-    // http://refused.invalid/next, a host no test app declares. The engine
-    // re-checks every hop where it enforces grants.
+    // http://refused.invalid/next, a host the app does not declare; the
+    // engine re-checks every hop.
     match client
         .execute("GET", "/redirect/refused", &CallOptions::new())
         .await

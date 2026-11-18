@@ -20,16 +20,16 @@ axios). One shared implementation is impossible: a TSX app runs on NSH's prebuil
 its own, and Rust generics and JS closures do not cross that boundary. So each side gets a full client, and the two
 suites cover one behavior list.
 
-The platform splits them (measured on 0.4.0; the Rust `fetch` doc on 0.6.0 still says the whole body arrives with
-the response). TSX streams: response bodies, streamed request bodies (`duplex: "half"`), SSE,
+The platform splits them (measured on 0.4.0 and again on 0.6.0, `docs/evidence/decision/exp2-rust-fetch-0.6.0-run.txt`). TSX streams: response bodies, streamed request bodies (`duplex: "half"`), SSE,
 and an honest `ttfbMs`, because `await fetch()` resolves at the response head. The Rust transport resolves once,
 with the whole body, so streaming and SSE are TS-only and Rust's events record `ttfbMs: null` rather than a number
 nothing measured.
 
 Requires NSH 0.6.0. Re-measured on 0.6.0: a Rust root's `capabilities.network` is now enforced (a refusal on a
 direct call and on a redirect hop), the headless live network closes an aborted request, `List` reorders, and
-`nsh test --target web` loads nsh-query apps (`docs/upstream-issues.md`). Not re-measured, and kept as the 0.4.0
-numbers: the Rust transport's whole-body behavior and the `ttfbMs` rules in `docs/decision.md`.
+`nsh test --target web` loads nsh-query apps (`docs/upstream-issues.md`). The Rust transport's
+whole-body behavior is unchanged on 0.6.0 (measured, headless and on macos), so the `ttfbMs` rules in
+`docs/decision.md` stand.
 
 ## Rust
 

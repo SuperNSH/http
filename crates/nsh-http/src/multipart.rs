@@ -5,11 +5,11 @@
 //! `name`/`filename` values, and a closing `--boundary--`. The generated
 //! boundary is checked against every part's content — RFC 2046 forbids a
 //! boundary that occurs inside it — so what [`MultipartForm::encode`] gives
-//! back parses the way it went in. On 0.4.0 the body travels as one byte
+//! back parses the way it went in. On 0.6.0 the body travels as one byte
 //! buffer through the client pipeline (`HttpBody::Stream` is refused there;
 //! see `docs/decision.md`, experiment 2).
 //!
-//! Note for 0.4.0: the client's `send_request` seam has to carry the
+//! Note for 0.6.0: the client's `send_request` seam has to carry the
 //! multipart `Content-Type` through to the wire; `MultipartForm::send` is
 //! written against that seam, so it works wherever custom headers on a
 //! `send_request` request are honored.
