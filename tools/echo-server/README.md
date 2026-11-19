@@ -4,8 +4,10 @@ Local sandbox HTTP server for the nsh-http build. The client libraries, example
 apps and live test suites integrate against it; nothing reaches an external network.
 
 Start it detached. Live tests and demo apps look for the server on 127.0.0.1:8123,
-because nsh test VMs on 0.4.0 cannot read `.runtime.json` or inherit environment,
-so the port must be known before the app runs:
+because an app cannot rely on reading `.runtime.json` or the environment: on NSH 0.6.0 `process.env` and `fs/promises`
+exist only on native hosts, behind `capabilities.process.env` / `capabilities.fs` grants (`nsh-core` `runtime/process.rs`,
+`access.rs`), and the apps also run on device targets where the host's files and environment are out of reach. The port
+must be known before the app runs:
 
     (cd tools/echo-server && ECHO_PORT=8123 nohup bun run src/server.ts >/tmp/nsh-http-echo.log 2>&1 &)
 
@@ -63,7 +65,7 @@ runtime file is not written at all unless `ECHO_RUNTIME_PATH` is set).
 | GET /redirect/refused | 302 to `http://refused.invalid/next` — a host no test app declares, so capability refusal on a redirect hop is provable |
 | GET /redirect/local | 302 to `/fast` |
 | GET /bytes/:n | `n` bytes with `Content-Length` (max 100000000) |
-| GET /log?tail=n | the last `n` lines of `.runtime.log` as `{"lines":[...]}`, parsed, oldest first (`tail` clamped 1–1000, default 20; `[]` on an empty log). Reading it appends nothing to the log. Test VMs on 0.4.0 cannot read files, so the nsh-query cancellation proof in `examples/demo-ts` goes through this route |
+| GET /log?tail=n | the last `n` lines of `.runtime.log` as `{"lines":[...]}`, parsed, oldest first (`tail` clamped 1–1000, default 20; `[]` on an empty log). Reading it appends nothing to the log. App code on device targets cannot read the host's files, so the nsh-query cancellation proof in `examples/demo-ts` goes through this route |
 
 `/slow`, `/stream` and `/sse` watch the request's abort signal; a client that
 disconnects early makes the server log an `aborted` line for that request.

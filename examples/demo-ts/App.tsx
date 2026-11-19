@@ -2,7 +2,8 @@ import { type JSX, mount, signal, Text, View } from "nsh";
 import { createClient, type HttpError, type NetworkEvent, type TokenProvider } from "nsh-http";
 import { createQuery, QueryClient } from "nsh-query";
 
-// The test VM on 0.4.0 cannot read files or inherit environment, so the echo
+// On 0.6.0 `process.env` and `fs` exist only on native hosts behind capability grants, and
+// this app also runs on device targets (emulator, simulator), so the echo
 // base URL is discovered by probing /health over the documented window — the
 // pinned default 8123 plus the fallback ports the server takes when 8123 is
 // already bound (the window is defined once in the repository README).

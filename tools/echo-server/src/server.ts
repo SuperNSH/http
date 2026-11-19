@@ -464,7 +464,7 @@ export async function start(opts: ServerOpts = {}): Promise<EchoServerHandle> {
   const { logPath, runtimePath } = resolvePaths(opts);
   const log = createJsonLog(logPath);
   const state: AppState = { flakyHits: new Map(), log };
-  // ECHO_PORT pins the port because nsh test VMs on 0.4.0 cannot read .runtime.json —
+  // ECHO_PORT pins the port because apps on device targets cannot read .runtime.json (0.6.0 grants fs/env only on native hosts) —
   // live suites and apps can only find the server on a port known in advance.
   const requested = process.env.ECHO_PORT ? Number(process.env.ECHO_PORT) : 0;
   const server = bindServer(requested, state, log);

@@ -1,6 +1,6 @@
 # Upstream issues
 
-Findings about NSH 0.4.0 and the sibling libraries made during this build, recorded read-only — nothing here edits
+Findings made on NSH 0.4.0 (entries 1, 2, 3 and 5 re-run on 0.6.0) and the sibling libraries made during this build, recorded read-only — nothing here edits
 another repository. Entries 1, 2, 3 and 5 were re-run on 0.6.0 and are fixed there; each says so under "Status on 0.6.0". Each entry states where it bites in this repository and the workaround in use. Line numbers
 refer to the exact installed sources (`nsh` 0.4.0 e626a8d; crates `~/.cargo/registry/src/*/nsh-*-0.4.0` and the
 reference checkout `~/fo/.refs/nsh-v0.4.0`, which is the same code).

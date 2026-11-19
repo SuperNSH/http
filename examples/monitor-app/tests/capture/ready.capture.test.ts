@@ -5,7 +5,7 @@
 // a target: the device operator captures per target with e.g.
 //   nsh test examples/monitor-app/tests/capture/ready.capture.test.ts --target ios
 // which saves docs/evidence/monitor/<os>-ready.png (the os comes from the app's
-// Storage, because test VMs cannot read the caller's environment).
+// Storage, because the app cannot see the caller's environment on device targets).
 import { expect, open, test } from "nsh/test";
 
 const WINDOW_START = 8123;
