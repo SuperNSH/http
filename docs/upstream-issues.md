@@ -53,9 +53,12 @@ Workaround in this repo: the cancellation proof (`examples/demo-ts/tests/live/ab
 `examples/demo-rs` capture flows) runs on `--target`; on the headless runner it skips loudly and names that
 command. Upstream fix: `UreqNetwork` should race the fetch future's drop/cancel against the socket and close it.
 
-Status on 0.6.0: fixed. The headless live network now closes the request on abort: with the skip removed,
-`examples/demo-ts/tests/live/abort.test.ts` passes headless and the server log shows `aborted` for both `/slow`
-requests, and the same test passes on `--target macos` and `--target web` (`docs/evidence/examples/abort-macos-0.6.0.txt`).
+Status on 0.6.0: NOT fixed headless (corrected; an earlier note here said fixed). Re-run on 0.6.0 (5541637) with the
+echo server up: `nsh test examples/demo-ts/tests/live/abort.test.ts` fails 3 of 3 headless (screen ends on "no · the log
+has no aborted request"; the server log shows both `/slow` requests ending 200 at ~3001 ms with no `aborted`), and CI's
+Linux `typescript` job failed the same way on 19e09b9. The same test passes on `--target macos`
+(`docs/evidence/examples/abort-macos-0.6.0.txt`). Upstream's `nsh-engine/src/net.rs` documents that a request blocked
+in a read is not interrupted by `cancel`. The test skips loudly headless again and is proven on a target.
 
 ## 3. TSX `List` does not apply incremental reorders on 0.4.0
 

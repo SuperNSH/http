@@ -26,7 +26,7 @@ with the whole body, so streaming and SSE are TS-only and Rust's events record `
 nothing measured.
 
 Requires NSH 0.6.0. Re-measured on 0.6.0: a Rust root's `capabilities.network` is now enforced (a refusal on a
-direct call and on a redirect hop), the headless live network closes an aborted request, `List` reorders, and
+direct call and on a redirect hop), `List` reorders, and
 `nsh test --target web` loads nsh-query apps (`docs/upstream-issues.md`). The Rust transport's
 whole-body behavior is unchanged on 0.6.0 (measured, headless and on macos), so the `ttfbMs` rules in
 `docs/decision.md` stand.
@@ -152,8 +152,9 @@ nsh test examples/demo-ts                                              # live te
 
 The Rust live tests (`#[ignore]`, `-- --ignored`) read the echo server's port from
 `tools/echo-server/.runtime.json` and fail loudly when the server is not up. The headless runner's live network on
-0.6.0 closes an aborted request, so the wire-level cancellation proof runs headless and on a target:
-`nsh test examples/demo-ts/tests/live/abort.test.ts [--target macos]` (`docs/evidence/examples/abort-macos-0.6.0.txt`).
+0.6.0 still does not close a request blocked in a read (`docs/upstream-issues.md`, issue 2), so the wire-level
+cancellation proof skips loudly headless and runs on a target:
+`nsh test examples/demo-ts/tests/live/abort.test.ts --target macos` (`docs/evidence/examples/abort-macos-0.6.0.txt`).
 
 ## Demo
 

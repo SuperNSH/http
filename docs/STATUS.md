@@ -41,8 +41,9 @@ Run on `nsh 0.6.0` with the echo server up on 8123. What changed and how it was 
   (the TS client passes it through), and a query was always appended with `?` even when the path had one (TS
   uses `&`). Unit test `client::tests::an_absolute_path_ignores_the_base_and_query_joins_with_the_right_separator`
   fails when `is_absolute` is broken.
-- **Cancellation proof (criterion 9) now runs headless too.** `examples/demo-ts/tests/live/abort.test.ts` no longer
-  skips on the headless runner; it passes headless, on `--target macos` (`docs/evidence/examples/abort-macos-0.6.0.txt`
+- **Cancellation proof (criterion 9) is proven on a target, not headless.** `examples/demo-ts/tests/live/abort.test.ts`
+  skips loudly on the headless runner again (0.6.0 headless still never aborts server-side: it failed 3 of 3 locally and
+  in CI on 19e09b9; upstream issue 2); it passes on `--target macos` (`docs/evidence/examples/abort-macos-0.6.0.txt`
   shows the server's `aborted` lines) and its capture leg on `--target web`. Fails when the final `yes` check is
   broken. `capture/demo.test.ts` comments updated; captures re-taken on macos and web and looked at:
   `docs/evidence/examples/demo-ts-{echo,query,auth}.png` and `*-web.png` (the web run was impossible on 0.4.0,
