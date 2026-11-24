@@ -4,6 +4,9 @@ description = "HTTP client for Native Shell Rust apps: typed JSON decoding, time
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+readme = "../../README.md"
+keywords = ["nsh", "http", "client", "fetch", "retry"]
 
 [dependencies]
 nsh-core = "0.6.0"

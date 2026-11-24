@@ -12,6 +12,14 @@ There are two versions with the same behavior:
 | Rust crate | `crates/nsh-http` | Rust and Rust-with-TSX apps |
 | TypeScript package | `packages/nsh-http` | TSX apps, signed packages, anything with no Rust crate |
 
+## Install
+
+```sh
+cargo add nsh-http
+```
+
+The TypeScript package is used as described in [TypeScript](#typescript).
+
 ## Why two versions
 
 Both clients wrap the transport NSH already has — TypeScript over the global `fetch`, Rust over
@@ -35,7 +43,7 @@ whole-body behavior is unchanged on 0.6.0 (measured, headless and on macos), so 
 
 ```toml
 [dependencies]
-nsh-http = { path = "../nsh-http/crates/nsh-http" }
+nsh-http = "0.1"
 ```
 
 ```rust
