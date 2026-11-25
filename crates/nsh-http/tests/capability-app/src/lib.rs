@@ -3,6 +3,7 @@
 //! server's `.runtime.json`.
 
 use nsh_base::theme;
+use nsh_core::element::desktop::window as app_window;
 use nsh_core::prelude::*;
 use nsh_http::{CallOptions, HttpClient};
 
@@ -107,6 +108,14 @@ async fn run_suite(lines: Signal<Vec<String>>) {
 pub fn App() -> impl IntoElement {
     let lines = signal(Vec::<String>::new());
     spawn(run_suite(lines));
+    app_window()
+        .id("main")
+        .title("capability-app")
+        .default_size(Size::new(px(480.0), px(640.0)))
+        .content(move || suite_screen(lines))
+}
+
+fn suite_screen(lines: Signal<Vec<String>>) -> impl IntoElement {
     view()
         .flex_1()
         .bg(move || theme().background)

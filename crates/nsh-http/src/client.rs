@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use nsh_core::access::parse_url;
-use nsh_core::platform::{HttpBody, HttpHead, HttpRequest};
+use nsh_core::platform::{HttpBody, HttpCache, HttpHead, HttpRequest};
 use nsh_core::prelude::HttpResponse;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -301,6 +301,7 @@ impl HttpClient {
             headers,
             body,
             follow_redirects: _,
+            cache: _,
         } = request;
         let options = CallOptions {
             headers,
@@ -489,6 +490,7 @@ impl HttpClient {
             headers,
             body: body.map_or(HttpBody::Empty, HttpBody::Bytes),
             follow_redirects: true,
+            cache: HttpCache::Default,
         };
 
         let started_at_ms = nsh_core::time::unix_ms();
@@ -544,6 +546,7 @@ async fn send(
                         HttpBody::Bytes(request.body)
                     },
                     follow_redirects: true,
+                    cache: HttpCache::Default,
                 };
                 match Timed::new(transport.fetch(http), timeout).await {
                     Ok(Ok(response)) => Ok(Response {

@@ -33,7 +33,7 @@ and an honest `ttfbMs`, because `await fetch()` resolves at the response head. T
 with the whole body, so streaming and SSE are TS-only and Rust's events record `ttfbMs: null` rather than a number
 nothing measured.
 
-Requires NSH 0.6.0. Re-measured on 0.6.0: a Rust root's `capabilities.network` is now enforced (a refusal on a
+Requires NSH 0.7.1. Measured on 0.6.0: a Rust root's `capabilities.network` is now enforced (a refusal on a
 direct call and on a redirect hop), `List` reorders, and
 `nsh test --target web` loads nsh-query apps (`docs/upstream-issues.md`). The Rust transport's
 whole-body behavior is unchanged on 0.6.0 (measured, headless and on macos), so the `ttfbMs` rules in
@@ -166,7 +166,7 @@ cancellation proof skips loudly headless and runs on a target:
 
 ## Demo
 
-From a clean clone to the demo running against the local echo server. Prerequisites: `nsh` 0.6.0, `bun`, Rust
+From a clean clone to the demo running against the local echo server. Prerequisites: `nsh` 0.7.1, `bun`, Rust
 stable, and the `nsh-query` repository cloned alongside this one (`git clone --depth 1 https://github.com/SuperNSH/query ~/nsh-query`;
 `~/nsh-query` below; adjust the path to yours) — the demo's query screen consumes its package read-only by
 symlink. The package is TanStack Query v5 based; its dependencies install with

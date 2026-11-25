@@ -242,6 +242,7 @@ fn SeamApp() -> impl IntoElement {
             ],
             body: HttpBody::Bytes(b"--xyz".to_vec()),
             follow_redirects: true,
+            cache: nsh_core::platform::HttpCache::Default,
         };
         let sent = client.send_request(multipart).await.is_ok();
         scenario
@@ -255,6 +256,7 @@ fn SeamApp() -> impl IntoElement {
             headers: Vec::new(),
             body: HttpBody::Bytes(br#"{"k":1}"#.to_vec()),
             follow_redirects: true,
+            cache: nsh_core::platform::HttpCache::Default,
         };
         let stamped = client.send_request(json).await.is_ok();
         scenario

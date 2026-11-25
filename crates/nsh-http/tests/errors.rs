@@ -209,6 +209,7 @@ fn StreamApp() -> impl IntoElement {
             headers: Vec::new(),
             body: HttpBody::Stream,
             follow_redirects: true,
+            cache: nsh_core::platform::HttpCache::Default,
         };
         let outcome = client.send_request(request).await;
         let loud = match &outcome {
